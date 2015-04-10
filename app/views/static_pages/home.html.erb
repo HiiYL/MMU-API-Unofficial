@@ -1,0 +1,9 @@
+<h1>StaticPages#home</h1>
+<p>Find me in app/views/static_pages/home.html.erb</p>
+<%= form_tag timetable_api_path, method: :post do %>
+  <%= label_tag :student_ID %><br>
+  <%= text_field_tag(:student_id) %><br>
+  <%= label_tag :Camsys_Password %> <br>
+  <%= password_field_tag(:password) %>
+  <%= submit_tag "Submit" %>
+<% end %>
