@@ -11,7 +11,17 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20150410041416) do
+ActiveRecord::Schema.define(version: 20150411092450) do
+
+  create_table "announcements", force: :cascade do |t|
+    t.string  "title"
+    t.text    "contents"
+    t.string  "author"
+    t.date    "posted_date"
+    t.integer "week_id"
+  end
+
+  add_index "announcements", ["week_id"], name: "index_announcements_on_week_id"
 
   create_table "subject_classes", force: :cascade do |t|
     t.string  "class_number"
@@ -36,5 +46,12 @@ ActiveRecord::Schema.define(version: 20150410041416) do
 
   create_table "timetables", force: :cascade do |t|
   end
+
+  create_table "weeks", force: :cascade do |t|
+    t.integer "subject_id"
+    t.string  "title"
+  end
+
+  add_index "weeks", ["subject_id"], name: "index_weeks_on_subject_id"
 
 end
