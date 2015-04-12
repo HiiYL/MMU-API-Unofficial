@@ -1,4 +1,27 @@
 class ApiController < ApplicationController
+  def portal
+    bulletins = []
+    agent = Mechanize.new
+    page = agent.get("https://online.mmu.edu.my/index.php")
+    form = page.form
+    form.form_loginUsername = params[:student_id] ||= ENV['STUDENT_ID']
+    form.form_loginPassword = params[:password] ||= ENV['PORTAL_PASSWORD']
+    page = agent.submit(form)
+    tab_number = 1
+    bulletin_number = 1
+    while !page.parser.xpath("//*[@id='tabs']/div[#{tab_number}]/div[#{bulletin_number}]").empty?
+      bulletin = Hash.new
+      bulletin[:title] = page.parser.xpath("//*[@id='tabs']/div[#{tab_number}]/div[#{bulletin_number}]/p/a[1]").text
+      bulletin[:details] = page.parser.xpath("//*[@id='tabs']/div[#{tab_number}]/div[#{bulletin_number}]/div/div/text()").text.split("\r\n        ").delete_if(&:empty?)
+      #remember to add android autolink
+      page.parser.xpath("//*[@id='tabs']/div[1]/div[2]/div/div/div")
+      bulletin[:contents] = page.parser.xpath("//*[@id='tabs']/div[#{tab_number}]/div[#{bulletin_number}]/div/div/div").text.delete("\t").delete("\r")
+      bulletins << bulletin
+      bulletin_number = bulletin_number + 1
+    end
+    render :json => JSON.pretty_generate(bulletins.as_json)
+  end
+
   def mmls
     agent = Mechanize.new
     page = agent.get("https://mmls.mmu.edu.my")
