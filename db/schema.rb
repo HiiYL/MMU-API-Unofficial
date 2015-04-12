@@ -31,9 +31,8 @@ ActiveRecord::Schema.define(version: 20150411092450) do
   end
 
   create_table "subjects", force: :cascade do |t|
-    t.string  "status"
-    t.string  "name"
-    t.integer "timetable_id"
+    t.string "status"
+    t.string "name"
   end
 
   create_table "timeslots", force: :cascade do |t|
@@ -42,9 +41,6 @@ ActiveRecord::Schema.define(version: 20150411092450) do
     t.string  "end_time"
     t.string  "venue"
     t.integer "subject_class_id"
-  end
-
-  create_table "timetables", force: :cascade do |t|
   end
 
   create_table "weeks", force: :cascade do |t|

@@ -29,35 +29,42 @@ class ApiController < ApplicationController
     form.stud_id = params[:student_id] ||= ENV['STUDENT_ID']
     form.stud_pswrd = params[:password] ||= ENV['MMLS_PASSWORD']
     page = agent.submit(form)
-    subject_links = page.links_with(:text => /[A-Z][A-Z][A-Z][0-9][0-9][0-9][0-9] . [A-Z][A-Z][A-Z]/)
-    subjects = []
-    subject_links.each do |link|
-      page = agent.get(link.uri)
-      original = page.parser.xpath('/html/body/div[1]/div[3]/div/div/div/div[1]')
-      subject = Subject.new
-      subject.name = original.xpath("div[1]").text.delete("\t").delete("\n")
-      week_number = 1
-      while !page.parser.xpath("//*[@id='accordion']/div[#{week_number}]/div[1]/h3/a").empty? do
-        week = subject.weeks.build
-        print "WEEK_NUMBER IS " + week_number.to_s + " \n"
-        week.title = page.parser.xpath("//*[@id='accordion']/div[#{week_number}]/div[1]/h3/a").text.delete("\r").delete("\n").delete("\t").split(" - ")[0]
-        announcement_number = 1
-        announcement_generic_path = page.parser.xpath("//*[@id='accordion']/div[#{week_number}]/div[2]/div/div/div")
-        while !announcement_generic_path.xpath("div[#{announcement_number}]/font").empty? do
-          announcement = week.announcements.build
-          print "ANNOUNCEMENT_NUMBER IS " + announcement_number.to_s + " \n"
-          announcement.title = announcement_generic_path.xpath("div[#{announcement_number}]/font").inner_text
-          announcement.contents = announcement_generic_path.xpath("div[#{announcement_number}]/p").inner_text
-          announcement.author = announcement_generic_path.xpath("div[#{announcement_number}]/div[1]").text.delete("\r").delete("\n").delete("\t").split(" ")[1]
-          announcement_number = announcement_number + 1
+    if page.parser.xpath('//*[@id="alert"]').empty?
+      subject_links = page.links_with(:text => /[A-Z][A-Z][A-Z][0-9][0-9][0-9][0-9] . [A-Z][A-Z][A-Z]/)
+      subjects = []
+      subject_links.each do |link|
+        unless (subject = Subject.find_by_name(link.text) and subject.weeks.exists?)
+          page = agent.get(link.uri)
+          original = page.parser.xpath('/html/body/div[1]/div[3]/div/div/div/div[1]')
+          subject_name = link.text
+          subject ||= Subject.new
+          subject.name = subject_name
+          week_number = 1
+          while !page.parser.xpath("//*[@id='accordion']/div[#{week_number}]/div[1]/h3/a").empty? do
+            week = subject.weeks.build
+            week.title = page.parser.xpath("//*[@id='accordion']/div[#{week_number}]/div[1]/h3/a").text.delete("\r").delete("\n").delete("\t").split(" - ")[0]
+            announcement_number = 1
+            announcement_generic_path = page.parser.xpath("//*[@id='accordion']/div[#{week_number}]/div[2]/div/div/div[1]")
+            while !announcement_generic_path.xpath("div[#{announcement_number}]/font").empty? do
+              announcement = week.announcements.build
+              announcement.title = announcement_generic_path.xpath("div[#{announcement_number}]/font").inner_text
+              announcement.contents = announcement_generic_path.xpath("div[#{announcement_number}]/p").inner_text
+              announcement.author = announcement_generic_path.xpath("div[#{announcement_number}]/div[1]/i[1]").text.delete("\r").delete("\n").delete("\t").split("               ").first[3..-1]
+              announcement.posted_date = announcement_generic_path.xpath("div[#{announcement_number}]/div[1]/i[1]").text.delete("\r").delete("\n").delete("\t").split("               ").last
+              announcement_number = announcement_number + 1
+            end
+            week_number = week_number + 1
+          end
+          subject.save
         end
-        week_number = week_number + 1
+        subjects << subject
       end
-      subjects << subject
+      render :json => JSON.pretty_generate(subjects.as_json(
+          :include => { :weeks => {
+           :include => :announcements}}))
+    else
+      render json: { error: "Incorrect username or password", status: 400}
     end
-    render :json => JSON.pretty_generate(subjects.as_json(
-        :include => { :weeks => {
-         :include => :announcements}}))
   end
   def timetable
   	agent = Mechanize.new
@@ -67,14 +74,14 @@ class ApiController < ApplicationController
     form.userid = params[:student_id] ||= ENV['STUDENT_ID']
     form.pwd = params[:password] ||= ENV['CAMSYS_PASSWORD']
     page = agent.submit(form)
+    subjects = []
     if page.parser.xpath('//*[@id="login_error"]').empty?
       page = agent.get("https://cms.mmu.edu.my/psc/csprd/EMPLOYEE/HRMS/c/SA_LEARNER_SERVICES.SSR_SSENRL_LIST.GBL?PORTALPARAM_PTCNAV=HC_SSR_SSENRL_LIST&amp;EOPP.SCNode=HRMS&amp;EOPP.SCPortal=EMPLOYEE&amp;EOPP.SCName=CO_EMPLOYEE_SELF_SERVICE&amp;EOPP.SCLabel=Self%20Service&amp;EOPP.SCPTfname=CO_EMPLOYEE_SELF_SERVICE&amp;FolderPath=PORTAL_ROOT_OBJECT.CO_EMPLOYEE_SELF_SERVICE.HCCC_ENROLLMENT.HC_SSR_SSENRL_LIST&amp;IsFolder=false&amp;PortalActualURL=https%3a%2f%2fcms.mmu.edu.my%2fpsc%2fcsprd%2fEMPLOYEE%2fHRMS%2fc%2fSA_LEARNER_SERVICES.SSR_SSENRL_LIST.GBL&amp;PortalContentURL=https%3a%2f%2fcms.mmu.edu.my%2fpsc%2fcsprd%2fEMPLOYEE%2fHRMS%2fc%2fSA_LEARNER_SERVICES.SSR_SSENRL_LIST.GBL&amp;PortalContentProvider=HRMS&amp;PortalCRefLabel=My%20Class%20Schedule&amp;PortalRegistryName=EMPLOYEE&amp;PortalServletURI=https%3a%2f%2fcms.mmu.edu.my%2fpsp%2fcsprd%2f&amp;PortalURI=https%3a%2f%2fcms.mmu.edu.my%2fpsc%2fcsprd%2f&amp;PortalHostNode=HRMS&amp;NoCrumbs=yes&amp;PortalKeyStruct=yes")
       table = page.parser.xpath('//*[@id="ACE_STDNT_ENRL_SSV2$0"]')
-      timetable = Timetable.new
       a = 2
       while !table.xpath("tr[#{a}]").empty? do
         filter = table.xpath("tr[#{a}]/td[2]/div/table")
-        subject = timetable.subjects.build
+        subject = Subject.new
         subject.name = filter.xpath('tr[1]').text
         status_temp = filter.xpath("tr[2]/td[1]/table/tr[2]").text.split("\n")
         status_temp.delete("")
@@ -87,7 +94,6 @@ class ApiController < ApplicationController
           test = temp.xpath('td[1]').text.split("\n")
           unless test.join.blank?
              unless subject_class.class_number.nil?
-              print "HELLLLLLLLLLLOOOOO"
                subject_class = subject.subject_classes.build
              end
             subject_class.class_number = temp.xpath('td[1]').text.delete("\n")
@@ -99,17 +105,22 @@ class ApiController < ApplicationController
           timeslot.start_time = temp.xpath('td[4]').text.delete("\n").slice!(3,999).split(" - ")[0]
           timeslot.end_time = temp.xpath('td[4]').text.delete("\n").slice!(3,999).split(" - ")[1]
           timeslot.venue = temp.xpath('td[5]').text.delete("\n")
-          print "WOW THIS IS GOING BIG"
-          print i
           i = i + 1
         end
         a = a + 2
+        subjects << subject
       end
-      render :json => JSON.pretty_generate(timetable.as_json(
-        :include => { :subjects => {
-         :include => { :subject_classes => {
-          :include => :timeslots, :except => [:id]} }, :except => [:id,:subject_class_id] }},
-           :except => [:id, :timetable_id]))
+      subjects_json = subjects.as_json( :include => { :subject_classes => {
+                                                       :include => {:timeslots => { :except => [:id, :subject_class_id] } },
+                                                        :except => [:id] } },
+                                                        :except => [:id, :subject_class_id])
+
+
+      render :json => JSON.pretty_generate(subjects_json)
+        # :include => { :subjects => {
+        #  :include => { :subject_classes => {
+        #   :include => :timeslots, :except => [:id]} }, :except => [:id,:subject_class_id] }},
+        #    :except => [:id]))
     else
       render json: { error: "Incorrect username or password", status: 400}
     end
