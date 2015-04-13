@@ -19,7 +19,8 @@ class ApiController < ApplicationController
       bulletins << bulletin
       bulletin_number = bulletin_number + 1
     end
-    render :json => JSON.pretty_generate(bulletins.as_json)
+    render json: bulletins
+    #render :json => JSON.pretty_generate(bulletins.as_json)
   end
 
   def mmls
@@ -59,11 +60,15 @@ class ApiController < ApplicationController
         end
         subjects << subject
       end
-      render :json => JSON.pretty_generate(subjects.as_json(
-          :include => { :weeks => {
-           :include => :announcements}}))
+      render json: subjects
+      # render :json => JSON.pretty_generate(subjects.as_json(
+      #     :include => { :weeks => {
+      #      :include => :announcements}}))
     else
-      render json: { error: "Incorrect username or password", status: 400}
+      message = Hash.new
+      message[:error] = "Incorrect username or password"
+      message[:status] = "400"
+      render json: message
     end
   end
   def timetable
@@ -122,7 +127,10 @@ class ApiController < ApplicationController
         #   :include => :timeslots, :except => [:id]} }, :except => [:id,:subject_class_id] }},
         #    :except => [:id]))
     else
-      render json: { error: "Incorrect username or password", status: 400}
+      message = Hash.new
+      message[:error] = "Incorrect username or password"
+      message[:status] = "400"
+      render json: message
     end
   end
 
