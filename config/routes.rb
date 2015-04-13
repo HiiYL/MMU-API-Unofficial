@@ -6,6 +6,9 @@ Rails.application.routes.draw do
   get 'timetable_api' => 'api#timetable'
   post 'timetable_api' => 'api#timetable'
 
+  get 'login_test' => 'api#login_test'
+  post 'login_test' => 'api#login_test'
+
   root 'static_pages#home'
 
   get 'static_pages/about'

@@ -125,6 +125,75 @@ class ApiController < ApplicationController
       render json: { error: "Incorrect username or password", status: 400}
     end
   end
+
+  def login_test
+    all_login_working = true
+    agent = Mechanize.new
+    agent.agent.http.verify_mode = OpenSSL::SSL::VERIFY_NONE
+    page = agent.get("https://cms.mmu.edu.my")
+    form = page.form
+    form.userid = params[:student_id] ||= ENV['STUDENT_ID']
+    form.pwd = params[:camsys_password] ||= ENV['CAMSYS_PASSWORD']
+    page = agent.submit(form)
+    subjects = []
+    unless page.parser.xpath('//*[@id="login_error"]').empty?
+      render json: {error: "Incorrect CAMSYS username or password", status: 400}
+      return
+    end
+    page = agent.get("https://mmls.mmu.edu.my")
+    form = page.form
+    form.stud_id = params[:student_id] ||= ENV['STUDENT_ID']
+    form.stud_pswrd = params[:mmls_password] ||= ENV['MMLS_PASSWORD']
+    page = agent.submit(form)
+    unless page.parser.xpath('//*[@id="alert"]').empty?
+      render json: {error: "Incorrect CAMSYS username or password", status: 400}
+      return
+    end
+    # page = agent.get("https://online.mmu.edu.my/index.php")
+    # form = page.form
+    # form.form_loginUsername = params[:student_id] ||= ENV['STUDENT_ID']
+    # form.form_loginPassword = params[:portal_password] ||= ENV['PORTAL_PASSWORD']
+    # page = agent.submit(form)
+    # unless page.parser.xpath('//*[@id="loginWrapper"]/div[1]/div/strong').empty?
+    #   render json: {error: "Incorrect Portal username or password", status: 400}
+    #   return
+    # end
+    render json: {success: "Successful Login", status: 100}
+  end
+  def login_portal_test
+
+  end
+
+  def login_mmls_test
+    agent = Mechanize.new
+    page = agent.get("https://mmls.mmu.edu.my")
+    form = page.form
+    form.stud_id = params[:student_id] ||= ENV['STUDENT_ID']
+    form.stud_pswrd = params[:password] ||= ENV['MMLS_PASSWORD']
+    page = agent.submit(form)
+    if page.parser.xpath('//*[@id="alert"]').empty?
+      render json: {success: "Successful Login", status: 100}
+    else
+      render json: {error: "Incorrect CAMSYS username or password", status: 400}
+    end
+
+  end
+
+  def login_camsys_test
+    agent = Mechanize.new
+    agent.agent.http.verify_mode = OpenSSL::SSL::VERIFY_NONE
+    page = agent.get("https://cms.mmu.edu.my")
+    form = page.form
+    form.userid = params[:student_id] ||= ENV['STUDENT_ID']
+    form.pwd = params[:password] ||= ENV['CAMSYS_PASSWORD']
+    page = agent.submit(form)
+    subjects = []
+    if page.parser.xpath('//*[@id="login_error"]').empty?
+      render json: {success: "Successful CAMSYS Login", status: 100}
+    else
+      render json: {error: "Incorrect CAMSYS username or password", status: 400}
+    end
+  end
   private
    def timetable_params
       timetable_params.allow("student_id", "password")

@@ -27,3 +27,13 @@
   <%= password_field_tag(:password) %>
   <%= submit_tag "Submit" %>
 <% end %>
+<h3>LOGIN TEST</h3>
+<%= form_tag login_test_path, method: :post do %>
+  <%= label_tag :student_ID %><br>
+  <%= text_field_tag(:student_id) %><br>
+  <%= label_tag :Camsys_Password %> <br>
+  <%= password_field_tag(:camsys_password) %><br>
+  <%= label_tag :MMLS_Password %> <br>
+  <%= password_field_tag(:mmls_password) %> <br>
+  <%= submit_tag "Submit" %>
+<% end %>
