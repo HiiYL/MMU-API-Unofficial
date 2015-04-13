@@ -135,10 +135,11 @@ class ApiController < ApplicationController
   end
 
   def login_test
-    message = Hash.new
-    message[:error] = "Incorrect username or password"
-    message[:status] = "400"
-    render json: message
+    payload = {
+      error: "No such user; check the submitted email address",
+      status: 400
+    }
+    render :json => payload, :status => :bad_request
     # all_login_working = true
     # agent = Mechanize.new
     # agent.agent.http.verify_mode = OpenSSL::SSL::VERIFY_NONE
