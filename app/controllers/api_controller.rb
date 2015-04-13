@@ -135,29 +135,33 @@ class ApiController < ApplicationController
   end
 
   def login_test
-    all_login_working = true
-    agent = Mechanize.new
-    agent.agent.http.verify_mode = OpenSSL::SSL::VERIFY_NONE
-    page = agent.get("https://cms.mmu.edu.my")
-    form = page.form
-    form.userid = params[:student_id] ||= ENV['STUDENT_ID']
-    form.pwd = params[:camsys_password] ||= ENV['CAMSYS_PASSWORD']
-    page = agent.submit(form)
-    subjects = []
-    unless page.parser.xpath('//*[@id="login_error"]').empty?
-      render json: {error: "Incorrect CAMSYS username or password", status: 400}
-      return
-    end
-    page = agent.get("https://mmls.mmu.edu.my")
-    form = page.form
-    form.stud_id = params[:student_id] ||= ENV['STUDENT_ID']
-    form.stud_pswrd = params[:mmls_password] ||= ENV['MMLS_PASSWORD']
-    page = agent.submit(form)
-    unless page.parser.xpath('//*[@id="alert"]').empty?
-      render json: {error: "Incorrect CAMSYS username or password", status: 400}
-      return
-    end
-    render json: {success: "Successful Login", status: 100}
+    message = Hash.new
+    message[:error] = "Incorrect username or password"
+    message[:status] = "400"
+    render json: message
+    # all_login_working = true
+    # agent = Mechanize.new
+    # agent.agent.http.verify_mode = OpenSSL::SSL::VERIFY_NONE
+    # page = agent.get("https://cms.mmu.edu.my")
+    # form = page.form
+    # form.userid = params[:student_id] ||= ENV['STUDENT_ID']
+    # form.pwd = params[:camsys_password] ||= ENV['CAMSYS_PASSWORD']
+    # page = agent.submit(form)
+    # subjects = []
+    # unless page.parser.xpath('//*[@id="login_error"]').empty?
+    #   render json: {error: "Incorrect CAMSYS username or password", status: 400}
+    #   return
+    # end
+    # page = agent.get("https://mmls.mmu.edu.my")
+    # form = page.form
+    # form.stud_id = params[:student_id] ||= ENV['STUDENT_ID']
+    # form.stud_pswrd = params[:mmls_password] ||= ENV['MMLS_PASSWORD']
+    # page = agent.submit(form)
+    # unless page.parser.xpath('//*[@id="alert"]').empty?
+    #   render json: {error: "Incorrect CAMSYS username or password", status: 400}
+    #   return
+    # end
+    # render json: {success: "Successful Login", status: 100}
   end
   def login_portal_test
 
