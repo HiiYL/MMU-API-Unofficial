@@ -1,4 +1,6 @@
 class ApiController < ApplicationController
+  skip_before_action :verify_authenticity_token
+
   def portal
     bulletins = []
     agent = Mechanize.new
@@ -139,7 +141,7 @@ class ApiController < ApplicationController
       error: "No such user; check the submitted email address",
       status: 400
     }
-    render json: payload
+    render json: payload, status: 200
     # all_login_working = true
     # agent = Mechanize.new
     # agent.agent.http.verify_mode = OpenSSL::SSL::VERIFY_NONE
@@ -164,6 +166,7 @@ class ApiController < ApplicationController
     # end
     # render json: {success: "Successful Login", status: 100}
   end
+
   def login_portal_test
 
   end
