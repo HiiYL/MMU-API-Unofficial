@@ -149,15 +149,6 @@ class ApiController < ApplicationController
       render json: {error: "Incorrect CAMSYS username or password", status: 400}
       return
     end
-    # page = agent.get("https://online.mmu.edu.my/index.php")
-    # form = page.form
-    # form.form_loginUsername = params[:student_id] ||= ENV['STUDENT_ID']
-    # form.form_loginPassword = params[:portal_password] ||= ENV['PORTAL_PASSWORD']
-    # page = agent.submit(form)
-    # unless page.parser.xpath('//*[@id="loginWrapper"]/div[1]/div/strong').empty?
-    #   render json: {error: "Incorrect Portal username or password", status: 400}
-    #   return
-    # end
     render json: {success: "Successful Login", status: 100}
   end
   def login_portal_test
