@@ -139,7 +139,7 @@ class ApiController < ApplicationController
       error: "No such user; check the submitted email address",
       status: 400
     }
-    render :json => payload, :status => :bad_request
+    render json: payload
     # all_login_working = true
     # agent = Mechanize.new
     # agent.agent.http.verify_mode = OpenSSL::SSL::VERIFY_NONE
