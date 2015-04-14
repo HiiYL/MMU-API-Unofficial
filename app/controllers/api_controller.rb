@@ -136,35 +136,42 @@ class ApiController < ApplicationController
     end
   end
 
+  def personal_information
+    agent = Mechanize.new
+    page = agent.get("https://mmls.mmu.edu.my")
+    form = page.form
+    form.stud_id = params[:student_id] ||= ENV['STUDENT_ID']
+    form.stud_pswrd = params[:password] ||= ENV['MMLS_PASSWORD']
+    page = agent.submit(form)
+  end
+
   def login_test
-    payload = {
-      error: "No such user; check the submitted email address",
-      status: 400
-    }
-    render json: payload, status: 200
-    # all_login_working = true
-    # agent = Mechanize.new
-    # agent.agent.http.verify_mode = OpenSSL::SSL::VERIFY_NONE
-    # page = agent.get("https://cms.mmu.edu.my")
-    # form = page.form
-    # form.userid = params[:student_id] ||= ENV['STUDENT_ID']
-    # form.pwd = params[:camsys_password] ||= ENV['CAMSYS_PASSWORD']
-    # page = agent.submit(form)
-    # subjects = []
-    # unless page.parser.xpath('//*[@id="login_error"]').empty?
-    #   render json: {error: "Incorrect CAMSYS username or password", status: 400}
-    #   return
-    # end
-    # page = agent.get("https://mmls.mmu.edu.my")
-    # form = page.form
-    # form.stud_id = params[:student_id] ||= ENV['STUDENT_ID']
-    # form.stud_pswrd = params[:mmls_password] ||= ENV['MMLS_PASSWORD']
-    # page = agent.submit(form)
-    # unless page.parser.xpath('//*[@id="alert"]').empty?
-    #   render json: {error: "Incorrect CAMSYS username or password", status: 400}
-    #   return
-    # end
-    # render json: {success: "Successful Login", status: 100}
+    agent = Mechanize.new
+    agent.agent.http.verify_mode = OpenSSL::SSL::VERIFY_NONE
+    page = agent.get("https://cms.mmu.edu.my")
+    form = page.form
+    form.userid = params[:student_id] ||= ENV['STUDENT_ID']
+    form.pwd = params[:camsys_password]
+    page = agent.submit(form)
+    subjects = []
+    unless page.parser.xpath('//*[@id="login_error"]').empty?
+      render json: {message: "Incorrect CAMSYS username or password", status: 400}, status:400
+      return
+    end
+    page = agent.get("https://mmls.mmu.edu.my")
+    form = page.form
+    form.stud_id = params[:student_id] ||= ENV['STUDENT_ID']
+    form.stud_pswrd = params[:mmls_password] ||= ENV['MMLS_PASSWORD']
+    page = agent.submit(form)
+    details_array = page.parser.xpath('/html/body/div[1]/div[3]/div/div/div/div[2]/div[2]/div[2]').text.delete("\r\t()").split("\n")
+    details = Hash.new
+    details[:name] = details_array[1]
+    details[:faculty] = details_array[3]
+    unless page.parser.xpath('//*[@id="alert"]').empty?
+      render json: {message: "Incorrect MMLS username or password", status: 400}, status:400
+      return
+    end
+    render json: {message: "Successful Login", profile: details,status: 100}
   end
 
   def login_portal_test
