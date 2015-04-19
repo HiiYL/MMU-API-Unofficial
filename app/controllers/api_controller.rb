@@ -62,10 +62,9 @@ class ApiController < ApplicationController
         end
         subjects << subject
       end
-      render json: subjects
-      # render :json => JSON.pretty_generate(subjects.as_json(
-      #     :include => { :weeks => {
-      #      :include => :announcements}}))
+      render :json => JSON.pretty_generate(subjects.as_json(
+          :include => { :weeks => {
+          :include => :announcements}}))
     else
       message = Hash.new
       message[:error] = "Incorrect username or password"
