@@ -9,6 +9,8 @@ Rails.application.routes.draw do
   get 'login_test' => 'api#login_test'
   post 'login_test' => 'api#login_test'
 
+  get 'download' => 'api#mmls_downloader'
+
   root 'static_pages#home'
 
   get 'static_pages/about'
