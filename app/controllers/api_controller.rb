@@ -51,7 +51,7 @@ class ApiController < ApplicationController
             while !announcement_generic_path.xpath("div[#{announcement_number}]/font").empty? do
               announcement = week.announcements.build
               announcement.title = announcement_generic_path.xpath("div[#{announcement_number}]/font").inner_text
-              announcement.contents = announcement_generic_path.xpath("div[#{announcement_number}]/p").inner_text
+              announcement.contents = announcement_generic_path.xpath("div[#{announcement_number}]/p").to_html
               announcement.author = announcement_generic_path.xpath("div[#{announcement_number}]/div[1]/i[1]").text.delete("\r").delete("\n").delete("\t").split("               ").first[3..-1]
               announcement.posted_date = announcement_generic_path.xpath("div[#{announcement_number}]/div[1]/i[1]").text.delete("\r").delete("\n").delete("\t").split("               ").last
               announcement_number = announcement_number + 1
