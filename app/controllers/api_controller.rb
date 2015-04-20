@@ -149,6 +149,7 @@ class ApiController < ApplicationController
     page = agent.submit(form)
   end
 
+
   def login_test
     agent = Mechanize.new
     agent.agent.http.verify_mode = OpenSSL::SSL::VERIFY_NONE
@@ -159,7 +160,7 @@ class ApiController < ApplicationController
     page = agent.submit(form)
     unless page.parser.xpath('//*[@id="login_error"]').empty?
       render json: {message: "Incorrect CAMSYS username or password", status: 400}, status:400
-      exit
+      return
     end
     page = agent.get("https://mmls.mmu.edu.my")
     form = page.form
@@ -172,7 +173,7 @@ class ApiController < ApplicationController
     details[:faculty] = details_array[3]
     unless page.parser.xpath('//*[@id="alert"]').empty?
       render json: {message: "Incorrect MMLS username or password", status: 400}, status:400
-      exit
+      return
     end
     render json: {message: "Successful Login", profile: details,status: 100}
   end
