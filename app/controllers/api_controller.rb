@@ -154,13 +154,12 @@ class ApiController < ApplicationController
     agent.agent.http.verify_mode = OpenSSL::SSL::VERIFY_NONE
     page = agent.get("https://cms.mmu.edu.my")
     form = page.form
-    form.userid = params[:student_id] ||= ENV['STUDENT_ID']
+    form.userid = params[:student_id]
     form.pwd = params[:camsys_password]
     page = agent.submit(form)
-    subjects = []
     unless page.parser.xpath('//*[@id="login_error"]').empty?
       render json: {message: "Incorrect CAMSYS username or password", status: 400}, status:400
-      return
+      exit
     end
     page = agent.get("https://mmls.mmu.edu.my")
     form = page.form
@@ -173,7 +172,7 @@ class ApiController < ApplicationController
     details[:faculty] = details_array[3]
     unless page.parser.xpath('//*[@id="alert"]').empty?
       render json: {message: "Incorrect MMLS username or password", status: 400}, status:400
-      return
+      exit
     end
     render json: {message: "Successful Login", profile: details,status: 100}
   end
