@@ -154,17 +154,17 @@ class ApiController < ApplicationController
     agent = Mechanize.new
     page = agent.get("https://mmls.mmu.edu.my")
     form = page.form
-    form.stud_id = params[:student_id] ||= ENV['STUDENT_ID']
-    form.stud_pswrd = params[:mmls_password] ||= ENV['MMLS_PASSWORD']
+    form.stud_id = params[:student_id]
+    form.stud_pswrd = params[:mmls_password]
     page = agent.submit(form)
     details_array = page.parser.xpath('/html/body/div[1]/div[3]/div/div/div/div[2]/div[2]/div[2]').text.delete("\r\t()").split("\n")
     details = Hash.new
     details[:name] = details_array[1]
     details[:faculty] = details_array[3]
     if page.parser.xpath('//*[@id="alert"]').empty?
-      render json: head: ok
+     render json: {message: "Incorrect MMLS username or password", status: 400}, status:400
     else
-      render json: {message: "Incorrect MMLS username or password", status: 400}, status:400
+      render json: {message: "Successful Login", profile: details,status: 100}
     end
   end
   def login_test

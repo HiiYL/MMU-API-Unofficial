@@ -37,3 +37,11 @@
   <%= password_field_tag(:mmls_password) %> <br>
   <%= submit_tag "Submit" %>
 <% end %>
+<h3>MMLS LOGIN TEST</h3>
+<%= form_tag login_mmls_path, method: :post do %>
+  <%= label_tag :student_ID %><br>
+  <%= text_field_tag(:student_id) %><br>
+  <%= label_tag :MMLS_Password %> <br>
+  <%= password_field_tag(:mmls_password) %> <br>
+  <%= submit_tag "Submit" %>
+<% end %>
