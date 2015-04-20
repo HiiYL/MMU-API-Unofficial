@@ -161,7 +161,7 @@ class ApiController < ApplicationController
     details = Hash.new
     details[:name] = details_array[1]
     details[:faculty] = details_array[3]
-    if page.parser.xpath('//*[@id="alert"]').empty?
+    unless page.parser.xpath('//*[@id="alert"]').empty?
      render json: {message: "Incorrect MMLS username or password", status: 400}, status:400
     else
       render json: {message: "Successful Login", profile: details,status: 100}
