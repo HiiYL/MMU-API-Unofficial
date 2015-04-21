@@ -7,10 +7,13 @@ Rails.application.routes.draw do
   get 'timetable_api' => 'api#timetable'
   post 'timetable_api' => 'api#timetable'
 
+  post 'mmls_refresh_cookie' => 'api#mmls_refresh_cookie'
+
   get 'login_test' => 'api#login_test'
   post 'login_test' => 'api#login_test'
 
-  get 'download' => 'api#mmls_downloader'
+
+  get 'download' => 'api#download_mmls'
 
   root 'static_pages#home'
 

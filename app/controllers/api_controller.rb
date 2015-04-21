@@ -40,6 +40,7 @@ class ApiController < ApplicationController
     if page.parser.xpath('//*[@id="alert"]').empty?
       subject_links = page.links_with(:text => /[A-Z][A-Z][A-Z][0-9][0-9][0-9][0-9] . [A-Z][A-Z][A-Z]/)
       subjects = []
+      files = []
       subject_links.each do |link|
         unless (subject = Subject.find_by_name(link.text) and subject.weeks.exists?)
           page = agent.get(link.uri)
@@ -63,19 +64,32 @@ class ApiController < ApplicationController
             end
             week_number = week_number + 1
           end
+          download_forms = page.forms_with(:action => 'https://mmls.mmu.edu.my/form-download-content')
+          download_forms.each do |form|
+            file_details_hash =  Hash[form.keys.zip(form.values)]
+            file = subject.subject_files.build
+            file.file_name = file_details_hash["file_name"]
+            file.token = file_details_hash["_token"]
+            file.content_id = file_details_hash["content_id"]
+            file.content_type = file_details_hash["content_type"]
+            file.file_path = file_details_hash["file_path"]
+          end
           subject.save
         end
         subjects << subject
       end
       render :json => JSON.pretty_generate(subjects.as_json(
-          :include => { :weeks => {
-          :include => :announcements}}))
+          :include => [{ :weeks => {
+          :include => :announcements}}, :subject_files]))
     else
       message = Hash.new
       message[:error] = "Incorrect username or password"
       message[:status] = "400"
       render json: message
     end
+  end
+
+  def mmls_files
   end
   def timetable
   	agent = Mechanize.new
@@ -148,8 +162,6 @@ class ApiController < ApplicationController
     form.stud_pswrd = params[:password] ||= ENV['MMLS_PASSWORD']
     page = agent.submit(form)
   end
-
-
   def login_mmls
     agent = Mechanize.new
     page = agent.get("https://mmls.mmu.edu.my")
@@ -161,10 +173,25 @@ class ApiController < ApplicationController
     details = Hash.new
     details[:name] = details_array[1]
     details[:faculty] = details_array[3]
+    laravel_cookie = agent.cookie_jar.jar.to_h["mmls.mmu.edu.my"]["/"]["laravel_session"].value
     unless page.parser.xpath('//*[@id="alert"]').empty?
      render json: {message: "Incorrect MMLS username or password", status: 400}, status:400
     else
-      render json: {message: "Successful Login", profile: details,status: 100}
+      render json: {message: "Successful Login", profile: details, cookie: laravel_cookie,status: 100}
+    end
+  end
+  def mmls_refresh_cookie
+    agent = Mechanize.new
+    page = agent.get("https://mmls.mmu.edu.my")
+    form = page.form
+    form.stud_id = params[:student_id]
+    form.stud_pswrd = params[:mmls_password]
+    page = agent.submit(form)
+    laravel_cookie = agent.cookie_jar.jar.to_h["mmls.mmu.edu.my"]["/"]["laravel_session"].value
+    unless page.parser.xpath('//*[@id="alert"]').empty?
+     render json: {message: "Incorrect MMLS username or password", status: 400}, status:400
+    else
+      render json: {message: "Successful Login", cookie: laravel_cookie,status: 100}
     end
   end
   def login_test
@@ -228,6 +255,20 @@ class ApiController < ApplicationController
     else
       render json: {error: "Incorrect CAMSYS username or password", status: 400}
     end
+  end
+
+  def download_mmls
+    agent = Mechanize.new
+    page = agent.get("https://mmls.mmu.edu.my")
+    form = page.form
+    form.stud_id = ENV['STUDENT_ID']
+    form.stud_pswrd = ENV['MMLS_PASSWORD']
+    page = agent.submit(form)
+    agent.pluggable_parser.default = Mechanize::Download
+    subject_links = page.links_with(:text => /[A-Z][A-Z][A-Z][0-9][0-9][0-9][0-9] . [A-Z][A-Z][A-Z]/)
+    page = agent.get(subject_links[2].uri)
+    form = page.form_with(:action => 'https://mmls.mmu.edu.my/form-download-content')
+    send_data agent.submit(form), name: "Lec7.pdf"
   end
   private
    def timetable_params
