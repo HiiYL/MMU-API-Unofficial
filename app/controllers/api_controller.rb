@@ -94,7 +94,7 @@ class ApiController < ApplicationController
 
   def refresh
     agent = Mechanize.new
-    page = agent.get("https://cms.mmu.edu.my")
+    page = agent.get("https://mmls.mmu.edu.my")
     form = page.form
     token = form._token
     form.stud_id = params[:student_id]
