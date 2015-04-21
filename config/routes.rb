@@ -11,6 +11,8 @@ Rails.application.routes.draw do
 
   post 'mmls_refresh_cookie' => 'api#mmls_refresh_cookie'
 
+  post 'refresh' => 'api#refresh'
+
   get 'login_test' => 'api#login_test'
   post 'login_test' => 'api#login_test'
 
