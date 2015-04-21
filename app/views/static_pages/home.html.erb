@@ -46,7 +46,7 @@
   <%= submit_tag "Submit" %>
 <% end %>
 <h3>MMLS COOKIE REFRESH TEST</h3>
-<%= form_tag mmls_refresh_cookie_path, method: :post do %>
+<%= form_tag refresh_token_path, method: :post do %>
   <%= label_tag :student_ID %><br>
   <%= text_field_tag(:student_id) %><br>
   <%= label_tag :MMLS_Password %> <br>

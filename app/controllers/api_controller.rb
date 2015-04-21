@@ -89,10 +89,7 @@ class ApiController < ApplicationController
     end
   end
 
-  def mmls_files
-  end
-
-  def refresh
+  def refresh_token
     agent = Mechanize.new
     page = agent.get("https://mmls.mmu.edu.my")
     form = page.form
@@ -203,20 +200,6 @@ class ApiController < ApplicationController
     page = agent.get("https://mmls.mmu.edu.my")
     form = page.form
     render json: {token: form._token}
-  end
-  def mmls_refresh_cookie
-    agent = Mechanize.new
-    page = agent.get("https://mmls.mmu.edu.my")
-    form = page.form
-    form.stud_id = params[:student_id]
-    form.stud_pswrd = params[:mmls_password]
-    page = agent.submit(form)
-    laravel_cookie = agent.cookie_jar.jar["mmls.mmu.edu.my"]["/"]["laravel_session"].value
-    unless page.parser.xpath('//*[@id="alert"]').empty?
-     render json: {message: "Incorrect MMLS username or password", status: 400}, status:400
-    else
-      render json: {message: "Successful Login", cookie: laravel_cookie,status: 100}
-    end
   end
   def login_test
     agent = Mechanize.new
