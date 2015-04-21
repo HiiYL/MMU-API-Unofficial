@@ -91,6 +91,23 @@ class ApiController < ApplicationController
 
   def mmls_files
   end
+
+  def refresh
+    agent = Mechanize.new
+    page = agent.get("https://cms.mmu.edu.my")
+    form = page.form
+    token = form._token
+    form.stud_id = params[:student_id]
+    form.stud_pswrd = params[:password]
+    agent.submit(form)
+    laravel_cookie = agent.cookie_jar.jar["mmls.mmu.edu.my"]["/"]["laravel_session"].value
+    unless page.parser.xpath('//*[@id="alert"]').empty?
+      render json: {message: "Incorrect MMLS username or password", status: 400}, status:400
+    else
+      render json: {token: form._token, cookie: laravel_cookie}
+    end
+
+  end
   def timetable
   	agent = Mechanize.new
     agent.agent.http.verify_mode = OpenSSL::SSL::VERIFY_NONE
@@ -174,7 +191,7 @@ class ApiController < ApplicationController
     details = Hash.new
     details[:name] = details_array[1]
     details[:faculty] = details_array[3]
-    laravel_cookie = agent.cookie_jar.jar.to_h["mmls.mmu.edu.my"]["/"]["laravel_session"].value
+    laravel_cookie = agent.cookie_jar.jar["mmls.mmu.edu.my"]["/"]["laravel_session"].value
     unless page.parser.xpath('//*[@id="alert"]').empty?
      render json: {message: "Incorrect MMLS username or password", status: 400}, status:400
     else
