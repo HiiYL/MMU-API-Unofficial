@@ -7,6 +7,8 @@ Rails.application.routes.draw do
   get 'timetable_api' => 'api#timetable'
   post 'timetable_api' => 'api#timetable'
 
+  get 'refresh_token' => 'api#get_token'
+
   post 'mmls_refresh_cookie' => 'api#mmls_refresh_cookie'
 
   get 'login_test' => 'api#login_test'
