@@ -241,40 +241,44 @@ class ApiController < ApplicationController
     agent.cookie_jar.add(cookie)
     agent.redirect_ok = false
     page = agent.get(url)
-    print "Page acquired, processing ... + \n"
-    original = page.parser.xpath('/html/body/div[1]/div[3]/div/div/div/div[1]')
-    subject_name = page.parser.xpath("/html/body/div[1]/div[3]/div/div/div/div[1]/div[1]/h3/div").text.delete("\n\t")
-    subject = Subject.new
-    subject.name = subject_name
-    week_number = 1
-    while !page.parser.xpath("//*[@id='accordion']/div[#{week_number}]/div[1]/h3/a").empty? do
-      week = subject.weeks.build
-      week.title = page.parser.xpath("//*[@id='accordion']/div[#{week_number}]/div[1]/h3/a").text.delete("\r").delete("\n").delete("\t").split(" - ")[0]
-      announcement_number = 1
-      announcement_generic_path = page.parser.xpath("//*[@id='accordion']/div[#{week_number}]/div[2]/div/div/div[1]")
-      while !announcement_generic_path.xpath("div[#{announcement_number}]/font").empty? do
-        announcement = week.announcements.build
-        announcement.title = announcement_generic_path.xpath("div[#{announcement_number}]/font").inner_text.delete("\r").delete("\t")
-        announcement.contents = announcement_generic_path.xpath("div[#{announcement_number}]").children[7..-1].text.delete("\r\t")
-        announcement.author = announcement_generic_path.xpath("div[#{announcement_number}]/div[1]/i[1]").text.delete("\r").delete("\n").delete("\t").split("  ;   ").first[3..-1]
-        announcement.posted_date = announcement_generic_path.xpath("div[#{announcement_number}]/div[1]/i[1]").text.delete("\r").delete("\n").delete("\t").split("               ").last
-        announcement_number = announcement_number + 1
-      end
-        week_number = week_number + 1
+    if page.code != "302"
+      print "Page acquired, processing ... + \n"
+      original = page.parser.xpath('/html/body/div[1]/div[3]/div/div/div/div[1]')
+      subject_name = page.parser.xpath("/html/body/div[1]/div[3]/div/div/div/div[1]/div[1]/h3/div").text.delete("\n\t")
+      subject = Subject.new
+      subject.name = subject_name
+      week_number = 1
+      while !page.parser.xpath("//*[@id='accordion']/div[#{week_number}]/div[1]/h3/a").empty? do
+        week = subject.weeks.build
+        week.title = page.parser.xpath("//*[@id='accordion']/div[#{week_number}]/div[1]/h3/a").text.delete("\r").delete("\n").delete("\t").split(" - ")[0]
+        announcement_number = 1
+        announcement_generic_path = page.parser.xpath("//*[@id='accordion']/div[#{week_number}]/div[2]/div/div/div[1]")
+        while !announcement_generic_path.xpath("div[#{announcement_number}]/font").empty? do
+          announcement = week.announcements.build
+          announcement.title = announcement_generic_path.xpath("div[#{announcement_number}]/font").inner_text.delete("\r").delete("\t")
+          announcement.contents = announcement_generic_path.xpath("div[#{announcement_number}]").children[7..-1].text.delete("\r\t")
+          announcement.author = announcement_generic_path.xpath("div[#{announcement_number}]/div[1]/i[1]").text.delete("\r").delete("\n").delete("\t").split("  ;   ").first[3..-1]
+          announcement.posted_date = announcement_generic_path.xpath("div[#{announcement_number}]/div[1]/i[1]").text.delete("\r").delete("\n").delete("\t").split("               ").last
+          announcement_number = announcement_number + 1
+        end
+          week_number = week_number + 1
+       end
+       download_forms = page.forms_with(:action => 'https://mmls.mmu.edu.my/form-download-content')
+       download_forms.each do |form|
+         file_details_hash =  Hash[form.keys.zip(form.values)]
+         file = subject.subject_files.build
+         file.file_name = file_details_hash["file_name"]
+         file.token = file_details_hash["_token"]
+         file.content_id = file_details_hash["content_id"]
+         file.content_type = file_details_hash["content_type"]
+         file.file_path = file_details_hash["file_path"]
+       end
+       render :json => JSON.pretty_generate(subject.as_json(
+          :include => [{ :weeks => {
+          :include => :announcements}}, :subject_files]))
+     else
+       render json: {error: "Cookie Expired", status: 400}
      end
-     download_forms = page.forms_with(:action => 'https://mmls.mmu.edu.my/form-download-content')
-     download_forms.each do |form|
-       file_details_hash =  Hash[form.keys.zip(form.values)]
-       file = subject.subject_files.build
-       file.file_name = file_details_hash["file_name"]
-       file.token = file_details_hash["_token"]
-       file.content_id = file_details_hash["content_id"]
-       file.content_type = file_details_hash["content_type"]
-       file.file_path = file_details_hash["file_path"]
-     end
-     render :json => JSON.pretty_generate(subject.as_json(
-        :include => [{ :weeks => {
-        :include => :announcements}}, :subject_files]))
   end
 
   def login_camsys_test
