@@ -277,7 +277,7 @@ class ApiController < ApplicationController
           :include => [{ :weeks => {
           :include => :announcements}}, :subject_files]))
      else
-       render json: {error: "Cookie Expired", status: 400}
+       render json: {error: "Cookie Expired", status: 400}, status: 400
      end
   end
 
