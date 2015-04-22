@@ -33,5 +33,13 @@
   <%= password_field_tag(:mmls_password) %> <br>
   <%= submit_tag "Submit" %>
 <% end %>
+<h3>MMLS SINGLE SUBJECT REFRESH TEST</h3>
+<%= form_tag refresh_subject_path, method: :post do %>
+  <%= label_tag :subject_url %><br>
+  <%= text_field_tag(:subject_url) %><br>
+  <%= label_tag :cookie %> <br>
+  <%= password_field_tag(:cookie) %> <br>
+  <%= submit_tag "Submit" %>
+<% end %>
 
 

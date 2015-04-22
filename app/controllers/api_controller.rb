@@ -232,9 +232,9 @@ class ApiController < ApplicationController
 
   def mmls_refresh_subject
     #url = params[:subject_uri]
-    url = params[:subject_url] || "https://mmls.mmu.edu.my/327:1427215013"
+    url = params[:subject_url]
     name = "laravel_session"
-    value = params[:cookie]  || "eyJpdiI6IjcxbVMxQVwvM09zODNLMVZVaEx6aTNnPT0iLCJ2YWx1ZSI6Imc4QkpJdzBuTU1uWVNpc05wbUR4VFg2Q3FNaTArdk1OaVY2M3h2QURWSzBtMHJnV0kremhPXC8zSVVtdzA4a0NKWFhJRWtJUUhvQTFGYmZVXC9renpGK3c9PSIsIm1hYyI6IjZhZDRkMzJmMzg1ZjRlOTY4ZDdhOGM1ZmE5MjNhMjcyNmVmNDA0MDBkNmE4N2U3ZGQ2YWUxOTJlN2EyMGI0MjkifQ%3D%3D"
+    value = params[:cookie]
     domain = "mmls.mmu.edu.my"
     cookie = Mechanize::Cookie.new :domain => domain, :name => name, :value => value, :path => '/', :expires => (Date.today + 1).to_s
     agent = Mechanize.new
