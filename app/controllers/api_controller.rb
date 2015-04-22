@@ -97,88 +97,80 @@ class ApiController < ApplicationController
     form.stud_id = params[:student_id]
     form.stud_pswrd = params[:password]
     agent.submit(form)
-    laravel_cookie = agent.cookie_jar.jar["mmls.mmu.edu.my"]["/"]["laravel_session"].value
+    laravel_cookie = agent.cookie_jar.first.value
     unless page.parser.xpath('//*[@id="alert"]').empty?
       render json: {message: "Incorrect MMLS username or password", status: 400}, status:400
     else
       render json: {token: form._token, cookie: laravel_cookie}
     end
-
-  end
-  def timetable
-  	agent = Mechanize.new
-    agent.agent.http.verify_mode = OpenSSL::SSL::VERIFY_NONE
-    page = agent.get("https://cms.mmu.edu.my")
-    form = page.form
-    form.userid = params[:student_id] ||= ENV['STUDENT_ID']
-    form.pwd = params[:password] ||= ENV['CAMSYS_PASSWORD']
-    page = agent.submit(form)
-    subjects = []
-    if page.parser.xpath('//*[@id="login_error"]').empty?
-      page = agent.get("https://cms.mmu.edu.my/psc/csprd/EMPLOYEE/HRMS/c/SA_LEARNER_SERVICES.SSR_SSENRL_LIST.GBL?PORTALPARAM_PTCNAV=HC_SSR_SSENRL_LIST&amp;EOPP.SCNode=HRMS&amp;EOPP.SCPortal=EMPLOYEE&amp;EOPP.SCName=CO_EMPLOYEE_SELF_SERVICE&amp;EOPP.SCLabel=Self%20Service&amp;EOPP.SCPTfname=CO_EMPLOYEE_SELF_SERVICE&amp;FolderPath=PORTAL_ROOT_OBJECT.CO_EMPLOYEE_SELF_SERVICE.HCCC_ENROLLMENT.HC_SSR_SSENRL_LIST&amp;IsFolder=false&amp;PortalActualURL=https%3a%2f%2fcms.mmu.edu.my%2fpsc%2fcsprd%2fEMPLOYEE%2fHRMS%2fc%2fSA_LEARNER_SERVICES.SSR_SSENRL_LIST.GBL&amp;PortalContentURL=https%3a%2f%2fcms.mmu.edu.my%2fpsc%2fcsprd%2fEMPLOYEE%2fHRMS%2fc%2fSA_LEARNER_SERVICES.SSR_SSENRL_LIST.GBL&amp;PortalContentProvider=HRMS&amp;PortalCRefLabel=My%20Class%20Schedule&amp;PortalRegistryName=EMPLOYEE&amp;PortalServletURI=https%3a%2f%2fcms.mmu.edu.my%2fpsp%2fcsprd%2f&amp;PortalURI=https%3a%2f%2fcms.mmu.edu.my%2fpsc%2fcsprd%2f&amp;PortalHostNode=HRMS&amp;NoCrumbs=yes&amp;PortalKeyStruct=yes")
-      table = page.parser.xpath('//*[@id="ACE_STDNT_ENRL_SSV2$0"]')
-      a = 2
-      while !table.xpath("tr[#{a}]").empty? do
-        filter = table.xpath("tr[#{a}]/td[2]/div/table")
-        subject = Subject.new
-        subject.name = filter.xpath('tr[1]').text
-        status_temp = filter.xpath("tr[2]/td[1]/table/tr[2]").text.split("\n")
-        status_temp.delete("")
-        subject.status = status_temp[4]
-        i = 2
-        subject_class = subject.subject_classes.build
-        holder = filter.xpath('tr[2]/td[1]/table/tr[3]/td/div/table')
-        while !holder.xpath("tr[#{i}]").empty? do
-          temp = holder.xpath("tr[#{i}]")
-          test = temp.xpath('td[1]').text.split("\n")
-          unless test.join.blank?
-             unless subject_class.class_number.nil?
-               subject_class = subject.subject_classes.build
-             end
-            subject_class.class_number = temp.xpath('td[1]').text.delete("\n")
-            subject_class.section = temp.xpath('td[2]').text.delete("\n")
-            subject_class.component = temp.xpath('td[3]').text.delete("\n")
-          end
-          timeslot = subject_class.timeslots.build
-          timeslot.day = temp.xpath('td[4]').text.delete("\n").split(" ")[0]
-          timeslot.start_time = temp.xpath('td[4]').text.delete("\n").slice!(3,999).split(" - ")[0]
-          timeslot.end_time = temp.xpath('td[4]').text.delete("\n").slice!(3,999).split(" - ")[1]
-          timeslot.venue = temp.xpath('td[5]').text.delete("\n")
-          i = i + 1
-        end
-        a = a + 2
-        subjects << subject
-      end
-      subjects_json = subjects.as_json( :include => { :subject_classes => {
-                                                       :include => {:timeslots => { :except => [:id, :subject_class_id] } },
-                                                        :except => [:id] } },
-                                                        :except => [:id, :subject_class_id])
-
-
-      render :json => JSON.pretty_generate(subjects_json)
-        # :include => { :subjects => {
-        #  :include => { :subject_classes => {
-        #   :include => :timeslots, :except => [:id]} }, :except => [:id,:subject_class_id] }},
-        #    :except => [:id]))
-    else
-      message = Hash.new
-      message[:error] = "Incorrect username or password"
-      message[:status] = "400"
-      render json: message
-    end
   end
 
-  def personal_information
-    agent = Mechanize.new
-    page = agent.get("https://mmls.mmu.edu.my")
-    form = page.form
-    form.stud_id = params[:student_id] ||= ENV['STUDENT_ID']
-    form.stud_pswrd = params[:password] ||= ENV['MMLS_PASSWORD']
-    page = agent.submit(form)
-  end
+  # def timetable
+  # 	agent = Mechanize.new
+  #   agent.agent.http.verify_mode = OpenSSL::SSL::VERIFY_NONE
+  #   page = agent.get("https://cms.mmu.edu.my")
+  #   form = page.form
+  #   form.userid = params[:student_id] ||= ENV['STUDENT_ID']
+  #   form.pwd = params[:password] ||= ENV['CAMSYS_PASSWORD']
+  #   page = agent.submit(form)
+  #   subjects = []
+  #   if page.parser.xpath('//*[@id="login_error"]').empty?
+  #     page = agent.get("https://cms.mmu.edu.my/psc/csprd/EMPLOYEE/HRMS/c/SA_LEARNER_SERVICES.SSR_SSENRL_LIST.GBL?PORTALPARAM_PTCNAV=HC_SSR_SSENRL_LIST&amp;EOPP.SCNode=HRMS&amp;EOPP.SCPortal=EMPLOYEE&amp;EOPP.SCName=CO_EMPLOYEE_SELF_SERVICE&amp;EOPP.SCLabel=Self%20Service&amp;EOPP.SCPTfname=CO_EMPLOYEE_SELF_SERVICE&amp;FolderPath=PORTAL_ROOT_OBJECT.CO_EMPLOYEE_SELF_SERVICE.HCCC_ENROLLMENT.HC_SSR_SSENRL_LIST&amp;IsFolder=false&amp;PortalActualURL=https%3a%2f%2fcms.mmu.edu.my%2fpsc%2fcsprd%2fEMPLOYEE%2fHRMS%2fc%2fSA_LEARNER_SERVICES.SSR_SSENRL_LIST.GBL&amp;PortalContentURL=https%3a%2f%2fcms.mmu.edu.my%2fpsc%2fcsprd%2fEMPLOYEE%2fHRMS%2fc%2fSA_LEARNER_SERVICES.SSR_SSENRL_LIST.GBL&amp;PortalContentProvider=HRMS&amp;PortalCRefLabel=My%20Class%20Schedule&amp;PortalRegistryName=EMPLOYEE&amp;PortalServletURI=https%3a%2f%2fcms.mmu.edu.my%2fpsp%2fcsprd%2f&amp;PortalURI=https%3a%2f%2fcms.mmu.edu.my%2fpsc%2fcsprd%2f&amp;PortalHostNode=HRMS&amp;NoCrumbs=yes&amp;PortalKeyStruct=yes")
+  #     table = page.parser.xpath('//*[@id="ACE_STDNT_ENRL_SSV2$0"]')
+  #     a = 2
+  #     while !table.xpath("tr[#{a}]").empty? do
+  #       filter = table.xpath("tr[#{a}]/td[2]/div/table")
+  #       subject = Subject.new
+  #       subject.name = filter.xpath('tr[1]').text
+  #       status_temp = filter.xpath("tr[2]/td[1]/table/tr[2]").text.split("\n")
+  #       status_temp.delete("")
+  #       subject.status = status_temp[4]
+  #       i = 2
+  #       subject_class = subject.subject_classes.build
+  #       holder = filter.xpath('tr[2]/td[1]/table/tr[3]/td/div/table')
+  #       while !holder.xpath("tr[#{i}]").empty? do
+  #         temp = holder.xpath("tr[#{i}]")
+  #         test = temp.xpath('td[1]').text.split("\n")
+  #         unless test.join.blank?
+  #            unless subject_class.class_number.nil?
+  #              subject_class = subject.subject_classes.build
+  #            end
+  #           subject_class.class_number = temp.xpath('td[1]').text.delete("\n")
+  #           subject_class.section = temp.xpath('td[2]').text.delete("\n")
+  #           subject_class.component = temp.xpath('td[3]').text.delete("\n")
+  #         end
+  #         timeslot = subject_class.timeslots.build
+  #         timeslot.day = temp.xpath('td[4]').text.delete("\n").split(" ")[0]
+  #         timeslot.start_time = temp.xpath('td[4]').text.delete("\n").slice!(3,999).split(" - ")[0]
+  #         timeslot.end_time = temp.xpath('td[4]').text.delete("\n").slice!(3,999).split(" - ")[1]
+  #         timeslot.venue = temp.xpath('td[5]').text.delete("\n")
+  #         i = i + 1
+  #       end
+  #       a = a + 2
+  #       subjects << subject
+  #     end
+  #     subjects_json = subjects.as_json( :include => { :subject_classes => {
+  #                                                      :include => {:timeslots => { :except => [:id, :subject_class_id] } },
+  #                                                       :except => [:id] } },
+  #                                                       :except => [:id, :subject_class_id])
+
+
+  #     render :json => JSON.pretty_generate(subjects_json)
+  #       # :include => { :subjects => {
+  #       #  :include => { :subject_classes => {
+  #       #   :include => :timeslots, :except => [:id]} }, :except => [:id,:subject_class_id] }},
+  #       #    :except => [:id]))
+  #   else
+  #     message = Hash.new
+  #     message[:error] = "Incorrect username or password"
+  #     message[:status] = "400"
+  #     render json: message
+  #   end
+  # end
   def login_mmls
     agent = Mechanize.new
     page = agent.get("https://mmls.mmu.edu.my")
+    print "Page acquired \n"
     form = page.form
     form.stud_id = params[:student_id]
     form.stud_pswrd = params[:mmls_password]
@@ -188,11 +180,20 @@ class ApiController < ApplicationController
     details = Hash.new
     details[:name] = details_array[1]
     details[:faculty] = details_array[3]
-    laravel_cookie = agent.cookie_jar.jar["mmls.mmu.edu.my"]["/"]["laravel_session"].value
+    subject_links = page.links_with(:text => /[A-Z][A-Z][A-Z][0-9][0-9][0-9][0-9] . [A-Z][A-Z][A-Z]/)
+    subjects = []
+    subject_links.each do |link|
+      subject = Hash.new
+      subject[:uri] = link.href
+      subject[:name] = link.text
+      subjects << subject
+    end
+
+    laravel_cookie = agent.cookie_jar.first.value
     unless page.parser.xpath('//*[@id="alert"]').empty?
      render json: {message: "Incorrect MMLS username or password", status: 400}, status:400
     else
-      render json: {message: "Successful Login", profile: details, cookie: laravel_cookie, token: token,status: 100}
+      render json: {message: "Successful Login", profile: details, cookie: laravel_cookie, subjects: subjects, token: token,status: 100}
     end
   end
   def get_token
@@ -201,51 +202,79 @@ class ApiController < ApplicationController
     form = page.form
     render json: {token: form._token}
   end
-  def login_test
+  # def login_test
+  #   agent = Mechanize.new
+  #   agent.agent.http.verify_mode = OpenSSL::SSL::VERIFY_NONE
+  #   page = agent.get("https://cms.mmu.edu.my")
+  #   form = page.form
+  #   form.userid = params[:student_id]
+  #   form.pwd = params[:camsys_password]
+  #   page = agent.submit(form)
+  #   unless page.parser.xpath('//*[@id="login_error"]').empty?
+  #     render json: {message: "Incorrect CAMSYS username or password", status: 400}, status:400
+  #     return
+  #   end
+  #   page = agent.get("https://mmls.mmu.edu.my")
+  #   form = page.form
+  #   form.stud_id = params[:student_id] ||= ENV['STUDENT_ID']
+  #   form.stud_pswrd = params[:mmls_password] ||= ENV['MMLS_PASSWORD']
+  #   page = agent.submit(form)
+  #   details_array = page.parser.xpath('/html/body/div[1]/div[3]/div/div/div/div[2]/div[2]/div[2]').text.delete("\r\t()").split("\n")
+  #   details = Hash.new
+  #   details[:name] = details_array[1]
+  #   details[:faculty] = details_array[3]
+  #   unless page.parser.xpath('//*[@id="alert"]').empty?
+  #     render json: {message: "Incorrect MMLS username or password", status: 400}, status:400
+  #     return
+  #   end
+  #   render json: {message: "Successful Login", profile: details,status: 100}
+  # end
+
+  def mmls_refresh_subject
+    #url = params[:subject_uri]
+    url = params[:subject_url] || "https://mmls.mmu.edu.my/327:1427215013"
+    name = "laravel_session"
+    value = params[:cookie]  || "eyJpdiI6IjcxbVMxQVwvM09zODNLMVZVaEx6aTNnPT0iLCJ2YWx1ZSI6Imc4QkpJdzBuTU1uWVNpc05wbUR4VFg2Q3FNaTArdk1OaVY2M3h2QURWSzBtMHJnV0kremhPXC8zSVVtdzA4a0NKWFhJRWtJUUhvQTFGYmZVXC9renpGK3c9PSIsIm1hYyI6IjZhZDRkMzJmMzg1ZjRlOTY4ZDdhOGM1ZmE5MjNhMjcyNmVmNDA0MDBkNmE4N2U3ZGQ2YWUxOTJlN2EyMGI0MjkifQ%3D%3D"
+    domain = "mmls.mmu.edu.my"
+    cookie = Mechanize::Cookie.new :domain => domain, :name => name, :value => value, :path => '/', :expires => (Date.today + 1).to_s
     agent = Mechanize.new
-    agent.agent.http.verify_mode = OpenSSL::SSL::VERIFY_NONE
-    page = agent.get("https://cms.mmu.edu.my")
-    form = page.form
-    form.userid = params[:student_id]
-    form.pwd = params[:camsys_password]
-    page = agent.submit(form)
-    unless page.parser.xpath('//*[@id="login_error"]').empty?
-      render json: {message: "Incorrect CAMSYS username or password", status: 400}, status:400
-      return
-    end
-    page = agent.get("https://mmls.mmu.edu.my")
-    form = page.form
-    form.stud_id = params[:student_id] ||= ENV['STUDENT_ID']
-    form.stud_pswrd = params[:mmls_password] ||= ENV['MMLS_PASSWORD']
-    page = agent.submit(form)
-    details_array = page.parser.xpath('/html/body/div[1]/div[3]/div/div/div/div[2]/div[2]/div[2]').text.delete("\r\t()").split("\n")
-    details = Hash.new
-    details[:name] = details_array[1]
-    details[:faculty] = details_array[3]
-    unless page.parser.xpath('//*[@id="alert"]').empty?
-      render json: {message: "Incorrect MMLS username or password", status: 400}, status:400
-      return
-    end
-    render json: {message: "Successful Login", profile: details,status: 100}
-  end
-
-  def login_portal_test
-
-  end
-
-  def login_mmls_test
-    agent = Mechanize.new
-    page = agent.get("https://mmls.mmu.edu.my")
-    form = page.form
-    form.stud_id = params[:student_id] ||= ENV['STUDENT_ID']
-    form.stud_pswrd = params[:password] ||= ENV['MMLS_PASSWORD']
-    page = agent.submit(form)
-    if page.parser.xpath('//*[@id="alert"]').empty?
-      render json: {success: "Successful Login", status: 100}
-    else
-      render json: {error: "Incorrect CAMSYS username or password", status: 400}
-    end
-
+    agent.cookie_jar.add(cookie)
+    agent.redirect_ok = false
+    page = agent.get(url)
+    print "Page acquired, processing ... + \n"
+    original = page.parser.xpath('/html/body/div[1]/div[3]/div/div/div/div[1]')
+    subject_name = page.parser.xpath("/html/body/div[1]/div[3]/div/div/div/div[1]/div[1]/h3/div").text.delete("\n\t")
+    subject = Subject.new
+    subject.name = subject_name
+    week_number = 1
+    while !page.parser.xpath("//*[@id='accordion']/div[#{week_number}]/div[1]/h3/a").empty? do
+      week = subject.weeks.build
+      week.title = page.parser.xpath("//*[@id='accordion']/div[#{week_number}]/div[1]/h3/a").text.delete("\r").delete("\n").delete("\t").split(" - ")[0]
+      announcement_number = 1
+      announcement_generic_path = page.parser.xpath("//*[@id='accordion']/div[#{week_number}]/div[2]/div/div/div[1]")
+      while !announcement_generic_path.xpath("div[#{announcement_number}]/font").empty? do
+        announcement = week.announcements.build
+        announcement.title = announcement_generic_path.xpath("div[#{announcement_number}]/font").inner_text.delete("\r").delete("\t")
+        announcement.contents = announcement_generic_path.xpath("div[#{announcement_number}]").children[7..-1].text.delete("\r\t")
+        announcement.author = announcement_generic_path.xpath("div[#{announcement_number}]/div[1]/i[1]").text.delete("\r").delete("\n").delete("\t").split("  ;   ").first[3..-1]
+        announcement.posted_date = announcement_generic_path.xpath("div[#{announcement_number}]/div[1]/i[1]").text.delete("\r").delete("\n").delete("\t").split("               ").last
+        announcement_number = announcement_number + 1
+      end
+        week_number = week_number + 1
+     end
+     download_forms = page.forms_with(:action => 'https://mmls.mmu.edu.my/form-download-content')
+     download_forms.each do |form|
+       file_details_hash =  Hash[form.keys.zip(form.values)]
+       file = subject.subject_files.build
+       file.file_name = file_details_hash["file_name"]
+       file.token = file_details_hash["_token"]
+       file.content_id = file_details_hash["content_id"]
+       file.content_type = file_details_hash["content_type"]
+       file.file_path = file_details_hash["file_path"]
+     end
+     render :json => JSON.pretty_generate(subject.as_json(
+        :include => [{ :weeks => {
+        :include => :announcements}}, :subject_files]))
   end
 
   def login_camsys_test
@@ -262,20 +291,6 @@ class ApiController < ApplicationController
     else
       render json: {error: "Incorrect CAMSYS username or password", status: 400}
     end
-  end
-
-  def download_mmls
-    agent = Mechanize.new
-    page = agent.get("https://mmls.mmu.edu.my")
-    form = page.form
-    form.stud_id = ENV['STUDENT_ID']
-    form.stud_pswrd = ENV['MMLS_PASSWORD']
-    page = agent.submit(form)
-    agent.pluggable_parser.default = Mechanize::Download
-    subject_links = page.links_with(:text => /[A-Z][A-Z][A-Z][0-9][0-9][0-9][0-9] . [A-Z][A-Z][A-Z]/)
-    page = agent.get(subject_links[2].uri)
-    form = page.form_with(:action => 'https://mmls.mmu.edu.my/form-download-content')
-    send_data agent.submit(form), name: "Lec7.pdf"
   end
   private
    def timetable_params

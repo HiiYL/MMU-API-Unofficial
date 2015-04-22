@@ -4,18 +4,14 @@ Rails.application.routes.draw do
   post 'mmls_api' => 'api#mmls'
   get 'bulletin_api' => 'api#portal'
   post 'bulletin_api' => 'api#portal'
-  get 'timetable_api' => 'api#timetable'
-  post 'timetable_api' => 'api#timetable'
+  # get 'timetable_api' => 'api#timetable'
+  # post 'timetable_api' => 'api#timetable'
+
+  post 'refresh_subject' => 'api#mmls_refresh_subject'
 
   post 'refresh_token' => 'api#refresh_token'
 
   post 'refresh' => 'api#refresh'
-
-  get 'login_test' => 'api#login_test'
-  post 'login_test' => 'api#login_test'
-
-
-  get 'download' => 'api#download_mmls'
 
   root 'static_pages#home'
 
