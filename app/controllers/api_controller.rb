@@ -210,7 +210,7 @@ class ApiController < ApplicationController
     details = Hash.new
     details[:name] = details_array[1]
     details[:faculty] = details_array[3]
-    subject_links = page.links_with(:text => /[A-Z][A-Z][A-Z][0-9][0-9][0-9][0-9] . [A-Z][A-Z][A-Z]/)
+    subject_links = page.links_with(:text => /[A-Z][A-Z][A-Z][0-9][0-9][0-9][0-9] . [A-Z][A-Z]/)
     subjects = []
     subject_links.each do |link|
       subject = Hash.new
