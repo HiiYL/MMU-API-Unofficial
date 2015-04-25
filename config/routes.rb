@@ -4,6 +4,8 @@ Rails.application.routes.draw do
   post 'mmls_api' => 'api#mmls'
   get 'bulletin_api' => 'api#portal'
   post 'bulletin_api' => 'api#portal'
+
+  post 'login_mmls_fast' => "api#login_mmls_fast"
   # get 'timetable_api' => 'api#timetable'
   # post 'timetable_api' => 'api#timetable'
 

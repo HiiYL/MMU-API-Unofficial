@@ -1,6 +1,36 @@
 class ApiController < ApplicationController
   skip_before_action :verify_authenticity_token
 
+  def login_mmls_fast
+    agent = Mechanize.new
+    page = agent.post('https://mmls.mmu.edu.my/checklogin',
+     { :_token => "00X5rufJWZHLz7VLeuTNw28W503y9YcbMyn6cHGw",
+       :stud_id => "1141125087",
+       :stud_pswrd => "CorrectS@kamoto146" })
+
+    print page
+
+    details_array = page.parser.xpath('/html/body/div[1]/div[3]/div/div/div/div[2]/div[2]/div[2]').text.delete("\r\t()").split("\n")
+    details = Hash.new
+    details[:name] = details_array[1]
+    details[:faculty] = details_array[3]
+    subject_links = page.links_with(:text => /[A-Z][A-Z][A-Z][0-9][0-9][0-9][0-9] . [A-Z][A-Z][A-Z]/)
+    subjects = []
+    subject_links.each do |link|
+      subject = Hash.new
+      subject[:uri] = link.href
+      subject[:name] = link.text
+      subjects << subject
+    end
+    print subject_links
+    laravel_cookie = agent.cookie_jar.first.value
+    unless page.parser.xpath('//*[@id="alert"]').empty?
+     render json: {message: "Incorrect MMLS username or password", status: 400}, status:400
+    else
+      render json: {message: "Successful Login", profile: details, cookie: laravel_cookie, subjects: subjects, token: token,status: 100}
+    end
+  end
+
   def portal
     bulletins = []
     agent = Mechanize.new
@@ -38,7 +68,7 @@ class ApiController < ApplicationController
     form.stud_pswrd = params[:password] ||= ENV['MMLS_PASSWORD']
     page = agent.submit(form)
     if page.parser.xpath('//*[@id="alert"]').empty?
-      subject_links = page.links_with(:text => /[A-Z][A-Z][A-Z][0-9][0-9][0-9][0-9] . [A-Z][A-Z][A-Z]/)
+      subject_links = page.links_with(:text => /[A-Z][A-Z][A-Z][0-9][0-9][0-9][0-9] . [A-Z][A-Z]/)
       subjects = []
       files = []
       subject_links.each do |link|
