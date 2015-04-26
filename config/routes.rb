@@ -2,8 +2,8 @@ Rails.application.routes.draw do
   post 'login_mmls' => 'api#login_mmls'
   get 'mmls_api' => 'api#mmls'
   post 'mmls_api' => 'api#mmls'
-  get 'bulletin_api' => 'api#portal'
-  post 'bulletin_api' => 'api#portal'
+  get 'bulletin_api' => 'api#bulletin'
+  post 'bulletin_api' => 'api#bulletin'
 
   post 'login_mmls_fast' => "api#login_mmls_fast"
   # get 'timetable_api' => 'api#timetable'
