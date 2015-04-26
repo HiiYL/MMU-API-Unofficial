@@ -274,7 +274,7 @@ class ApiController < ApplicationController
     bulletins = []
     tab_number = 1
     bulletin_number = 1
-    while !page.parser.xpath("//*[@id='tabs-1']/div[#{bulletin_number}]").empty? and bulletin_number < 50
+    while !page.parser.xpath("//*[@id='tabs-1']/div[#{bulletin_number}]").empty? and bulletin_number < 20
       print "EXECUTING " + bulletin_number.to_s + "\n"
       bulletin_post = page.parser.xpath("//*[@id='tabs-1']/div[#{bulletin_number}]")
       bulletin = Hash.new
