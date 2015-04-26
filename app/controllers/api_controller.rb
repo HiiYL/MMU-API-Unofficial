@@ -261,7 +261,8 @@ class ApiController < ApplicationController
   # end
 
   def bulletin
-    url = "https://online.mmu.edu.my/index.php"
+    #url = "https://online.mmu.edu.my/index.php"
+    url = "https://online.mmu.edu.my/bulletin.php"
     domain = "online.mmu.edu.my"
     name="PHPSESSID"
     value="n9bdcd4khh5f8kqothdpm21f77"
@@ -273,19 +274,34 @@ class ApiController < ApplicationController
     bulletins = []
     tab_number = 1
     bulletin_number = 1
-    while !page.parser.xpath("//*[@id='tabs']/div[#{tab_number}]/div[#{bulletin_number}]").empty?
+    while !page.parser.xpath("//*[@id='tabs-1']/div[#{bulletin_number}]").empty? and bulletin_number < 50
+      print "EXECUTING " + bulletin_number.to_s + "\n"
+      bulletin_post = page.parser.xpath("//*[@id='tabs-1']/div[#{bulletin_number}]")
       bulletin = Hash.new
-      bulletin[:title] = page.parser.xpath("//*[@id='tabs']/div[#{tab_number}]/div[#{bulletin_number}]/p/a[1]").text
-      bulletin_details = page.parser.xpath("//*[@id='tabs']/div[#{tab_number}]/div[#{bulletin_number}]/div/div/text()").text.split("\r\n        ").delete_if(&:empty?)
+      bulletin[:title] = bulletin_post.xpath("p/a[1]").text
+      bulletin_details = bulletin_post.xpath("div/div/text()").text.split("\r\n        ").delete_if(&:empty?)
       #remember to add android autolink
       bulletin[:posted_date] = bulletin_details[0].split(" ")[2..5].join(" ")
       bulletin[:expired_date] = bulletin_details[1].split(" : ")[1]
       bulletin[:author] = bulletin_details[2].split(" : ")[1].delete("\t")
-      page.parser.xpath("//*[@id='tabs']/div[1]/div[2]/div/div/div")
-      bulletin[:contents] = page.parser.xpath("//*[@id='tabs']/div[#{tab_number}]/div[#{bulletin_number}]/div/div/div").text.delete("\t").delete("\r")
+      bulletin[:contents] = bulletin_post.xpath("div/div/div").text.delete("\t").delete("\r")
       bulletins << bulletin
       bulletin_number = bulletin_number + 1
     end
+
+    # while !page.parser.xpath("//*[@id='tabs']/div[#{tab_number}]/div[#{bulletin_number}]").empty?
+    #   bulletin = Hash.new
+    #   bulletin[:title] = page.parser.xpath("//*[@id='tabs']/div[#{tab_number}]/div[#{bulletin_number}]/p/a[1]").text
+    #   bulletin_details = page.parser.xpath("//*[@id='tabs']/div[#{tab_number}]/div[#{bulletin_number}]/div/div/text()").text.split("\r\n        ").delete_if(&:empty?)
+    #   #remember to add android autolink
+    #   bulletin[:posted_date] = bulletin_details[0].split(" ")[2..5].join(" ")
+    #   bulletin[:expired_date] = bulletin_details[1].split(" : ")[1]
+    #   bulletin[:author] = bulletin_details[2].split(" : ")[1].delete("\t")
+    #   page.parser.xpath("//*[@id='tabs']/div[1]/div[2]/div/div/div")
+    #   bulletin[:contents] = page.parser.xpath("//*[@id='tabs']/div[#{tab_number}]/div[#{bulletin_number}]/div/div/div").text.delete("\t").delete("\r")
+    #   bulletins << bulletin
+    #   bulletin_number = bulletin_number + 1
+    # end
     render :json => JSON.pretty_generate(bulletins.as_json)
   end
 
