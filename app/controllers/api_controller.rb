@@ -265,7 +265,7 @@ class ApiController < ApplicationController
     url = "https://online.mmu.edu.my/bulletin.php"
     domain = "online.mmu.edu.my"
     name="PHPSESSID"
-    value="nsrpt9fbpd8n0ltmpppvp1jne5"
+    value="u5n67quk42a7m6q426bhv124o5"
     cookie = Mechanize::Cookie.new :domain => domain, :name => name, :value => value, :path => '/', :expires => (Date.today + 1).to_s
     agent = Mechanize.new
     agent.cookie_jar.add(cookie)
