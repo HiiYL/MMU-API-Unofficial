@@ -8,7 +8,6 @@ class ApiController < ApplicationController
        :stud_id => "1141125087",
        :stud_pswrd => "CorrectS@kamoto146" })
     print page
-
     details_array = page.parser.xpath('/html/body/div[1]/div[3]/div/div/div/div[2]/div[2]/div[2]').text.delete("\r\t()").split("\n")
     details = Hash.new
     details[:name] = details_array[1]
