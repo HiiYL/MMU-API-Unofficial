@@ -5,8 +5,7 @@ class CreateSubjectClasses < ActiveRecord::Migration
       t.string :section
       t.string :component
       t.references :subject
-
-      add_foreign_key :subject_classes, :subjects
     end
+      add_foreign_key :subject_classes, :subjects
   end
 end

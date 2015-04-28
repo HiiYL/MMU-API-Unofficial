@@ -8,8 +8,7 @@ class CreateTimeslots < ActiveRecord::Migration
       # t.string :end_date
       t.string :venue
       t.references :subject_class
-
-      add_foreign_key :timeslots, :subject_classes
     end
+      add_foreign_key :timeslots, :subject_classes
   end
 end
