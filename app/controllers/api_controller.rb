@@ -302,6 +302,7 @@ class ApiController < ApplicationController
     #   bulletins << bulletin
     #   bulletin_number = bulletin_number + 1
     # end
+    
     render :json => JSON.pretty_generate(bulletins.as_json)
   end
 
