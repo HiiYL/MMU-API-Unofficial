@@ -3,7 +3,6 @@ class ApiController < ApplicationController
 
   def login_mmls_fast
     agent = Mechanize.new
-    
     page = agent.post('https://mmls.mmu.edu.my/checklogin',
      { :_token => "etPG48SlUmWsUVuU57wmhrA6SNEVX3RCPRKVtiYd",
        :stud_id => "1141125087",
