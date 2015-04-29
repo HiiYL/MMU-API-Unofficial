@@ -1,32 +1,33 @@
 class ApiController < ApplicationController
   skip_before_action :verify_authenticity_token
 
-  def login_mmls_fast
-    agent = Mechanize.new
-    page = agent.post('https://mmls.mmu.edu.my/checklogin',
-     { :_token => "etPG48SlUmWsUVuU57wmhrA6SNEVX3RCPRKVtiYd",
-       :stud_id => "1141125087",
-       :stud_pswrd => "CorrectS@kamoto146" })
-    print page
-    details_array = page.parser.xpath('/html/body/div[1]/div[3]/div/div/div/div[2]/div[2]/div[2]').text.delete("\r\t()").split("\n")
-    details = Hash.new
-    details[:name] = details_array[1]
-    details[:faculty] = details_array[3]
-    subject_links = page.links_with(:text => /[A-Z][A-Z][A-Z][0-9][0-9][0-9][0-9] . [A-Z][A-Z][A-Z]/)
-    subjects = []
-    subject_links.each do |link|
-      subject = Hash.new
-      subject[:uri] = link.href
-      subject[:name] = link.text
-      subjects << subject
-    end
-    print subject_links
-    laravel_cookie = agent.cookie_jar.first.value
-    unless page.parser.xpath('//*[@id="alert"]').empty?
-     render json: {message: "Incorrect MMLS username or password", status: 400}, status:400
-    else
-      render json: {message: "Successful Login", profile: details, cookie: laravel_cookie, subjects: subjects, token: token,status: 100}
-    end
+
+  def update_bulletin
+    # agent = Mechanize.new
+    # page = agent.get("https://online.mmu.edu.my/index.php")
+    # form = page.form
+    # bulletins = []
+    # form.form_loginUsername =  ENV['STUDENT_ID']
+    # form.form_loginPassword = ENV['PORTAL_PASSWORD']
+    # page = agent.submit(form)
+    # page = agent.get("https://online.mmu.edu.my/bulletin.php")
+    # bulletin_number = 1
+    # while !page.parser.xpath("//*[@id='tabs-1']/div[#{bulletin_number}]").empty? and bulletin_number < 20
+    #   print "EXECUTING " + bulletin_number.to_s + "\n"
+    #   bulletin_post = page.parser.xpath("//*[@id='tabs-1']/div[#{bulletin_number}]")
+    #   bulletin = Bulletin.new
+    #   bulletin.title = bulletin_post.xpath("p/a[1]").text
+    #   bulletin_details = bulletin_post.xpath("div/div/text()").text.split("\r\n        ").delete_if(&:empty?)
+    #   #remember to add android autolink
+    #   bulletin.posted_date = bulletin_details[0].split(" ")[2..5].join(" ")
+    #   bulletin.url = page.parser.xpath('//*[@id="tabs-1"]/div[1]/p/a/@href').text
+    #   bulletin.expired_date = bulletin_details[1].split(" : ")[1]
+    #   bulletin.author = bulletin_details[2].split(" : ")[1].delete("\t")
+    #   bulletin.contents = bulletin_post.xpath("div/div/div").text.delete("\t").delete("\r")
+    #   bulletin.save
+    #   bulletin_number = bulletin_number + 1
+    # end
+    render json: JSON.pretty_generate( Bulletin.order(posted_date: :desc).limit(20).as_json)
   end
 
   def portal
@@ -34,7 +35,7 @@ class ApiController < ApplicationController
     agent = Mechanize.new
     page = agent.get("https://online.mmu.edu.my/index.php")
     form = page.form
-    form.form_loginUsername = params[:student_id]
+    # form.form_loginUsername = params[:student_id]
     #form.form_loginUsername =  ENV['STUDENT_ID']
     form.form_loginPassword = params[:password]
     #form.form_loginPassword = ENV['PORTAL_PASSWORD']
@@ -230,62 +231,49 @@ class ApiController < ApplicationController
     form = page.form
     render json: {token: form._token}
   end
-  # def login_test
-  #   agent = Mechanize.new
-  #   agent.agent.http.verify_mode = OpenSSL::SSL::VERIFY_NONE
-  #   page = agent.get("https://cms.mmu.edu.my")
-  #   form = page.form
-  #   form.userid = params[:student_id]
-  #   form.pwd = params[:camsys_password]
-  #   page = agent.submit(form)
-  #   unless page.parser.xpath('//*[@id="login_error"]').empty?
-  #     render json: {message: "Incorrect CAMSYS username or password", status: 400}, status:400
-  #     return
-  #   end
-  #   page = agent.get("https://mmls.mmu.edu.my")
-  #   form = page.form
-  #   form.stud_id = params[:student_id] ||= ENV['STUDENT_ID']
-  #   form.stud_pswrd = params[:mmls_password] ||= ENV['MMLS_PASSWORD']
-  #   page = agent.submit(form)
-  #   details_array = page.parser.xpath('/html/body/div[1]/div[3]/div/div/div/div[2]/div[2]/div[2]').text.delete("\r\t()").split("\n")
-  #   details = Hash.new
-  #   details[:name] = details_array[1]
-  #   details[:faculty] = details_array[3]
-  #   unless page.parser.xpath('//*[@id="alert"]').empty?
-  #     render json: {message: "Incorrect MMLS username or password", status: 400}, status:400
-  #     return
-  #   end
-  #   render json: {message: "Successful Login", profile: details,status: 100}
-  # end
 
   def bulletin
+    render json: JSON.pretty_generate( Bulletin.order(posted_date: :desc).limit(20).as_json)
     #url = "https://online.mmu.edu.my/index.php"
-    url = "https://online.mmu.edu.my/bulletin.php"
-    domain = "online.mmu.edu.my"
-    name="PHPSESSID"
-    value="1j85pnqi7bu43htvrsd88m91d1"
-    cookie = Mechanize::Cookie.new :domain => domain, :name => name, :value => value, :path => '/', :expires => (Date.today + 1).to_s
-    agent = Mechanize.new
-    agent.cookie_jar.add(cookie)
-    agent.redirect_ok = false
-    page = agent.get(url)
-    bulletins = []
-    tab_number = 1
-    bulletin_number = 1
-    while !page.parser.xpath("//*[@id='tabs-1']/div[#{bulletin_number}]").empty? and bulletin_number < 20
-      print "EXECUTING " + bulletin_number.to_s + "\n"
-      bulletin_post = page.parser.xpath("//*[@id='tabs-1']/div[#{bulletin_number}]")
-      bulletin = Hash.new
-      bulletin[:title] = bulletin_post.xpath("p/a[1]").text
-      bulletin_details = bulletin_post.xpath("div/div/text()").text.split("\r\n        ").delete_if(&:empty?)
-      #remember to add android autolink
-      bulletin[:posted_date] = bulletin_details[0].split(" ")[2..5].join(" ")
-      bulletin[:expired_date] = bulletin_details[1].split(" : ")[1]
-      bulletin[:author] = bulletin_details[2].split(" : ")[1].delete("\t")
-      bulletin[:contents] = bulletin_post.xpath("div/div/div").text.delete("\t").delete("\r")
-      bulletins << bulletin
-      bulletin_number = bulletin_number + 1
-    end
+    # url = "https://online.mmu.edu.my/bulletin.php"
+    # domain = "online.mmu.edu.my"
+    # cookie_name="PHPSESSID"
+    # agent = Mechanize.new
+    # if session = SessionCookie.where(name: cookie_name).last
+    #   cookie = Mechanize::Cookie.new :domain => domain, :name => name, :value => value, :path => '/', :expires => (Date.today + 1).to_s
+    #   agent.cookie_jar.add(cookie)
+    #   agent.redirect_ok = false
+    # else
+    #   ## REFRESH BULLETIN COOKIE
+    # end
+
+    # page = agent.get(url)
+    # if agent.code == 302
+    #   ## REFRESH BULLETIN COOKIE
+    #   session = Session.new
+    #   session.name = name
+    #   session.value = value
+    #   session.save
+    #   cookie = Mechanize::Cookie.new :domain => domain, :name => session.name, :value => value, :path => '/', :expires => (Date.today + 1).to_s
+    #   page = agent.get(url)
+    # end
+    # bulletins = []
+    # tab_number = 1
+    # bulletin_number = 1
+    # while !page.parser.xpath("//*[@id='tabs-1']/div[#{bulletin_number}]").empty? and bulletin_number < 20
+    #   print "EXECUTING " + bulletin_number.to_s + "\n"
+    #   bulletin_post = page.parser.xpath("//*[@id='tabs-1']/div[#{bulletin_number}]")
+    #   bulletin = Hash.new
+    #   bulletin[:title] = bulletin_post.xpath("p/a[1]").text
+    #   bulletin_details = bulletin_post.xpath("div/div/text()").text.split("\r\n        ").delete_if(&:empty?)
+    #   #remember to add android autolink
+    #   bulletin[:posted_date] = bulletin_details[0].split(" ")[2..5].join(" ")
+    #   bulletin[:expired_date] = bulletin_details[1].split(" : ")[1]
+    #   bulletin[:author] = bulletin_details[2].split(" : ")[1].delete("\t")
+    #   bulletin[:contents] = bulletin_post.xpath("div/div/div").text.delete("\t").delete("\r")
+    #   bulletins << bulletin
+    #   bulletin_number = bulletin_number + 1
+    # end
 
     # while !page.parser.xpath("//*[@id='tabs']/div[#{tab_number}]/div[#{bulletin_number}]").empty?
     #   bulletin = Hash.new
@@ -301,7 +289,7 @@ class ApiController < ApplicationController
     #   bulletin_number = bulletin_number + 1
     # end
     
-    render :json => JSON.pretty_generate(bulletins.as_json)
+    # render :json => JSON.pretty_generate(bulletins.as_json)
   end
 
   def mmls_refresh_subject

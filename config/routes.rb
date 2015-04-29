@@ -1,4 +1,5 @@
 Rails.application.routes.draw do
+  get 'update_bulletin' => 'api#update_bulletin'
   post 'login_mmls' => 'api#login_mmls'
   get 'mmls_api' => 'api#mmls'
   post 'mmls_api' => 'api#mmls'

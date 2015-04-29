@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20150421042951) do
+ActiveRecord::Schema.define(version: 20150429144750) do
 
   create_table "announcements", force: :cascade do |t|
     t.string  "title"
@@ -22,6 +22,24 @@ ActiveRecord::Schema.define(version: 20150421042951) do
   end
 
   add_index "announcements", ["week_id"], name: "index_announcements_on_week_id"
+
+  create_table "bulletins", force: :cascade do |t|
+    t.string   "title"
+    t.string   "posted_date"
+    t.string   "expired_date"
+    t.string   "author"
+    t.string   "url"
+    t.string   "contents"
+    t.datetime "created_at",   null: false
+    t.datetime "updated_at",   null: false
+  end
+
+  create_table "session_cookies", force: :cascade do |t|
+    t.string   "name"
+    t.string   "value"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+  end
 
   create_table "subject_classes", force: :cascade do |t|
     t.string  "class_number"
