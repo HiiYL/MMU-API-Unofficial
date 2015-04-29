@@ -31,14 +31,12 @@ ActiveRecord::Schema.define(version: 20150421042951) do
   end
 
   create_table "subject_files", force: :cascade do |t|
-    t.string   "file_name"
-    t.string   "token"
-    t.string   "content_id"
-    t.string   "content_type"
-    t.string   "file_path"
-    t.integer  "subject_id"
-    t.datetime "created_at",   null: false
-    t.datetime "updated_at",   null: false
+    t.string  "file_name"
+    t.string  "token"
+    t.string  "content_id"
+    t.string  "content_type"
+    t.string  "file_path"
+    t.integer "subject_id"
   end
 
   add_index "subject_files", ["subject_id"], name: "index_subject_files_on_subject_id"
