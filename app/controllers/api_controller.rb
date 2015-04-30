@@ -248,7 +248,7 @@ class ApiController < ApplicationController
   end
 
   def bulletin
-    render json: JSON.pretty_generate( Bulletin.order(posted_date: :desc).limit(20).as_json)
+    render json: JSON.pretty_generate( Bulletin.order(posted_date: :desc, url: :desc).limit(20).as_json)
     #url = "https://online.mmu.edu.my/index.php"
     # url = "https://online.mmu.edu.my/bulletin.php"
     # domain = "online.mmu.edu.my"
