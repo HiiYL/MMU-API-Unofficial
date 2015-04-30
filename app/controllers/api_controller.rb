@@ -336,6 +336,7 @@ class ApiController < ApplicationController
           announcement.contents = announcement_generic_path.xpath("div[#{announcement_number}]").children[7..-1].text.delete("\r\t")
           announcement.author = announcement_generic_path.xpath("div[#{announcement_number}]/div[1]/i[1]").text.delete("\r").delete("\n").delete("\t").split("  ;   ").first[3..-1]
           announcement.posted_date = announcement_generic_path.xpath("div[#{announcement_number}]/div[1]/i[1]").text.delete("\r").delete("\n").delete("\t").split("               ").last
+
           if !announcement_generic_path.xpath("div[#{announcement_number}]").at('form').nil?
             print("FILES EXISTS !!!")
             form_nok = announcement_generic_path.xpath("div[#{announcement_number}]").at('form')
@@ -352,17 +353,15 @@ class ApiController < ApplicationController
         end
           week_number = week_number + 1
        end
-       download_forms = page.forms_with(:action => 'https://mmls.mmu.edu.my/form-download-content')
+       download_forms = page.forms_with(:action => 'https://mmls.mmu.edu.my/form-download-content').uniq{ |x| x.content_id }
        download_forms.each do |form|
          file_details_hash =  Hash[form.keys.zip(form.values)]
-         unless file_details_hash['file_path'].split("/").last == "announcement"
-           file = subject.subject_files.build
-           file.file_name = file_details_hash["file_name"]
-           file.token = file_details_hash["_token"]
-           file.content_id = file_details_hash["content_id"]
-           file.content_type = file_details_hash["content_type"]
-           file.file_path = file_details_hash["file_path"]
-         end
+         file = subject.subject_files.build
+         file.file_name = file_details_hash["file_name"]
+         file.token = file_details_hash["_token"]
+         file.content_id = file_details_hash["content_id"]
+         file.content_type = file_details_hash["content_type"]
+         file.file_path = file_details_hash["file_path"]
        end
        render :json => JSON.pretty_generate(subject.as_json(
           :include => [{ :weeks => {
