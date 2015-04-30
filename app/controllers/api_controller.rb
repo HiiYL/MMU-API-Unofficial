@@ -385,7 +385,7 @@ class ApiController < ApplicationController
       render json: {error: "Incorrect CAMSYS username or password", status: 400}
     end
   end
-  
+
   private
    def timetable_params
       timetable_params.allow("student_id", "password")
