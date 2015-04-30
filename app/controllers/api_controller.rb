@@ -343,7 +343,7 @@ class ApiController < ApplicationController
             form = Mechanize::Form.new form_nok, agent, page
             file_details_hash =  Hash[form.keys.zip(form.values)]
             file = announcement.subject_files.build
-            file.file_name = file_details_hash["file_name"
+            file.file_name = file_details_hash["file_name"]
             file.token = file_details_hash["_token"]
             file.content_id = file_details_hash["content_id"]
             file.content_type = file_details_hash["content_type"]
