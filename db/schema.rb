@@ -34,13 +34,6 @@ ActiveRecord::Schema.define(version: 20150429144750) do
     t.datetime "updated_at",   null: false
   end
 
-  create_table "session_cookies", force: :cascade do |t|
-    t.string   "name"
-    t.string   "value"
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
-  end
-
   create_table "subject_classes", force: :cascade do |t|
     t.string  "class_number"
     t.string  "section"
@@ -55,8 +48,10 @@ ActiveRecord::Schema.define(version: 20150429144750) do
     t.string  "content_type"
     t.string  "file_path"
     t.integer "subject_id"
+    t.integer "announcement_id"
   end
 
+  add_index "subject_files", ["announcement_id"], name: "index_subject_files_on_announcement_id"
   add_index "subject_files", ["subject_id"], name: "index_subject_files_on_subject_id"
 
   create_table "subjects", force: :cascade do |t|

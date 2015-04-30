@@ -7,7 +7,7 @@ class CreateSubjectFiles < ActiveRecord::Migration
       t.string :content_type
       t.string :file_path
       t.references :subject, index: true, foreign_key: true
-
+      t.references :announcement, index: true, foreign_key: true
       # t.timestamps null: false
     end
   end

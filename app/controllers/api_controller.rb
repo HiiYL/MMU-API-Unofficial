@@ -89,9 +89,21 @@ class ApiController < ApplicationController
             while !announcement_generic_path.xpath("div[#{announcement_number}]/font").empty? do
               announcement = week.announcements.build
               announcement.title = announcement_generic_path.xpath("div[#{announcement_number}]/font").inner_text.delete("\r").delete("\t")
-              announcement.contents = announcement_generic_path.xpath("div[#{announcement_number}]").children[7..-1]
+              announcement.contents = announcement_generic_path.xpath("div[#{announcement_number}]").children[7..-1].text.delete("\r\t")
               announcement.author = announcement_generic_path.xpath("div[#{announcement_number}]/div[1]/i[1]").text.delete("\r").delete("\n").delete("\t").split("  ;   ").first[3..-1]
               announcement.posted_date = announcement_generic_path.xpath("div[#{announcement_number}]/div[1]/i[1]").text.delete("\r").delete("\n").delete("\t").split("               ").last
+              if !announcement_generic_path.xpath("div[#{announcement_number}]").at('form').nil?
+                print("FILES EXISTS !!!")
+                form_nok = announcement_generic_path.xpath("div[#{announcement_number}]").at('form')
+                form = Mechanize::Form.new form_nok, agent, page
+                file_details_hash =  Hash[form.keys.zip(form.values)]
+                file = announcement.subject_files.build
+                file.file_name = file_details_hash["file_name"]
+                file.token = file_details_hash["_token"]
+                file.content_id = file_details_hash["content_id"]
+                file.content_type = file_details_hash["content_type"]
+                file.file_path = file_details_hash["file_path"]
+              end
               announcement_number = announcement_number + 1
             end
             week_number = week_number + 1
@@ -112,7 +124,7 @@ class ApiController < ApplicationController
       end
       render :json => JSON.pretty_generate(subjects.as_json(
           :include => [{ :weeks => {
-          :include => :announcements}}, :subject_files]))
+          :include => {:announcements => {:include => :subject_files} } }}, :subject_files]))
     else
       message = Hash.new
       message[:error] = "Incorrect username or password"
@@ -321,10 +333,22 @@ class ApiController < ApplicationController
         while !announcement_generic_path.xpath("div[#{announcement_number}]/font").empty? do
           announcement = week.announcements.build
           announcement.title = announcement_generic_path.xpath("div[#{announcement_number}]/font").inner_text.delete("\r").delete("\t")
-          announcement.contents = announcement_generic_path.xpath("div[#{announcement_number}]").children[7..-1]#.text.delete("\r\t")
+          announcement.contents = announcement_generic_path.xpath("div[#{announcement_number}]").children[7..-1].text.delete("\r\t")
           announcement.author = announcement_generic_path.xpath("div[#{announcement_number}]/div[1]/i[1]").text.delete("\r").delete("\n").delete("\t").split("  ;   ").first[3..-1]
           announcement.posted_date = announcement_generic_path.xpath("div[#{announcement_number}]/div[1]/i[1]").text.delete("\r").delete("\n").delete("\t").split("               ").last
           announcement_number = announcement_number + 1
+          if !announcement_generic_path.xpath("div[#{announcement_number}]").at('form').nil?
+            print("FILES EXISTS !!!")
+            form_nok = announcement_generic_path.xpath("div[#{announcement_number}]").at('form')
+            form = Mechanize::Form.new form_nok, agent, page
+            file_details_hash =  Hash[form.keys.zip(form.values)]
+            file = announcement.subject_files.build
+            file.file_name = file_details_hash["file_name"
+            file.token = file_details_hash["_token"]
+            file.content_id = file_details_hash["content_id"]
+            file.content_type = file_details_hash["content_type"]
+            file.file_path = file_details_hash["file_path"]
+          end
         end
           week_number = week_number + 1
        end
@@ -340,7 +364,7 @@ class ApiController < ApplicationController
        end
        render :json => JSON.pretty_generate(subject.as_json(
           :include => [{ :weeks => {
-          :include => :announcements}}, :subject_files]))
+          :include => {:announcements => {:include => :subject_files} }}}, :subject_files]))
      else
        render json: {message: "Cookie Expired", status: 400}, status: 400
      end
