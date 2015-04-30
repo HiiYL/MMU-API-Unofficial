@@ -336,7 +336,6 @@ class ApiController < ApplicationController
           announcement.contents = announcement_generic_path.xpath("div[#{announcement_number}]").children[7..-1].text.delete("\r\t")
           announcement.author = announcement_generic_path.xpath("div[#{announcement_number}]/div[1]/i[1]").text.delete("\r").delete("\n").delete("\t").split("  ;   ").first[3..-1]
           announcement.posted_date = announcement_generic_path.xpath("div[#{announcement_number}]/div[1]/i[1]").text.delete("\r").delete("\n").delete("\t").split("               ").last
-          announcement_number = announcement_number + 1
           if !announcement_generic_path.xpath("div[#{announcement_number}]").at('form').nil?
             print("FILES EXISTS !!!")
             form_nok = announcement_generic_path.xpath("div[#{announcement_number}]").at('form')
@@ -349,6 +348,7 @@ class ApiController < ApplicationController
             file.content_type = file_details_hash["content_type"]
             file.file_path = file_details_hash["file_path"]
           end
+             announcement_number = announcement_number + 1
         end
           week_number = week_number + 1
        end
