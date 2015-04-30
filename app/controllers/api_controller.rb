@@ -355,12 +355,14 @@ class ApiController < ApplicationController
        download_forms = page.forms_with(:action => 'https://mmls.mmu.edu.my/form-download-content')
        download_forms.each do |form|
          file_details_hash =  Hash[form.keys.zip(form.values)]
-         file = subject.subject_files.build
-         file.file_name = file_details_hash["file_name"]
-         file.token = file_details_hash["_token"]
-         file.content_id = file_details_hash["content_id"]
-         file.content_type = file_details_hash["content_type"]
-         file.file_path = file_details_hash["file_path"]
+         unless file_details_hash['file_path'].split("/").last == "announcement"
+           file = subject.subject_files.build
+           file.file_name = file_details_hash["file_name"]
+           file.token = file_details_hash["_token"]
+           file.content_id = file_details_hash["content_id"]
+           file.content_type = file_details_hash["content_type"]
+           file.file_path = file_details_hash["file_path"]
+         end
        end
        render :json => JSON.pretty_generate(subject.as_json(
           :include => [{ :weeks => {
