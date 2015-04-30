@@ -89,7 +89,7 @@ class ApiController < ApplicationController
             while !announcement_generic_path.xpath("div[#{announcement_number}]/font").empty? do
               announcement = week.announcements.build
               announcement.title = announcement_generic_path.xpath("div[#{announcement_number}]/font").inner_text.delete("\r").delete("\t")
-              announcement.contents = announcement_generic_path.xpath("div[#{announcement_number}]").children[7..-1].text.delete("\r\t")
+              announcement.contents = announcement_generic_path.xpath("div[#{announcement_number}]").children[7..-1]
               announcement.author = announcement_generic_path.xpath("div[#{announcement_number}]/div[1]/i[1]").text.delete("\r").delete("\n").delete("\t").split("  ;   ").first[3..-1]
               announcement.posted_date = announcement_generic_path.xpath("div[#{announcement_number}]/div[1]/i[1]").text.delete("\r").delete("\n").delete("\t").split("               ").last
               announcement_number = announcement_number + 1
@@ -321,7 +321,7 @@ class ApiController < ApplicationController
         while !announcement_generic_path.xpath("div[#{announcement_number}]/font").empty? do
           announcement = week.announcements.build
           announcement.title = announcement_generic_path.xpath("div[#{announcement_number}]/font").inner_text.delete("\r").delete("\t")
-          announcement.contents = announcement_generic_path.xpath("div[#{announcement_number}]").children[7..-1].text.delete("\r\t")
+          announcement.contents = announcement_generic_path.xpath("div[#{announcement_number}]").children[7..-1]#.text.delete("\r\t")
           announcement.author = announcement_generic_path.xpath("div[#{announcement_number}]/div[1]/i[1]").text.delete("\r").delete("\n").delete("\t").split("  ;   ").first[3..-1]
           announcement.posted_date = announcement_generic_path.xpath("div[#{announcement_number}]/div[1]/i[1]").text.delete("\r").delete("\n").delete("\t").split("               ").last
           announcement_number = announcement_number + 1
