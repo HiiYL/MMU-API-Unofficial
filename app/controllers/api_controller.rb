@@ -248,63 +248,7 @@ class ApiController < ApplicationController
   end
 
   def bulletin
-    render json: JSON.pretty_generate( Bulletin.order(posted_date: :desc, url: :desc).limit(20).as_json)
-    #url = "https://online.mmu.edu.my/index.php"
-    # url = "https://online.mmu.edu.my/bulletin.php"
-    # domain = "online.mmu.edu.my"
-    # cookie_name="PHPSESSID"
-    # agent = Mechanize.new
-    # if session = SessionCookie.where(name: cookie_name).last
-    #   cookie = Mechanize::Cookie.new :domain => domain, :name => name, :value => value, :path => '/', :expires => (Date.today + 1).to_s
-    #   agent.cookie_jar.add(cookie)
-    #   agent.redirect_ok = false
-    # else
-    #   ## REFRESH BULLETIN COOKIE
-    # end
-
-    # page = agent.get(url)
-    # if agent.code == 302
-    #   ## REFRESH BULLETIN COOKIE
-    #   session = Session.new
-    #   session.name = name
-    #   session.value = value
-    #   session.save
-    #   cookie = Mechanize::Cookie.new :domain => domain, :name => session.name, :value => value, :path => '/', :expires => (Date.today + 1).to_s
-    #   page = agent.get(url)
-    # end
-    # bulletins = []
-    # tab_number = 1
-    # bulletin_number = 1
-    # while !page.parser.xpath("//*[@id='tabs-1']/div[#{bulletin_number}]").empty? and bulletin_number < 20
-    #   print "EXECUTING " + bulletin_number.to_s + "\n"
-    #   bulletin_post = page.parser.xpath("//*[@id='tabs-1']/div[#{bulletin_number}]")
-    #   bulletin = Hash.new
-    #   bulletin[:title] = bulletin_post.xpath("p/a[1]").text
-    #   bulletin_details = bulletin_post.xpath("div/div/text()").text.split("\r\n        ").delete_if(&:empty?)
-    #   #remember to add android autolink
-    #   bulletin[:posted_date] = bulletin_details[0].split(" ")[2..5].join(" ")
-    #   bulletin[:expired_date] = bulletin_details[1].split(" : ")[1]
-    #   bulletin[:author] = bulletin_details[2].split(" : ")[1].delete("\t")
-    #   bulletin[:contents] = bulletin_post.xpath("div/div/div").text.delete("\t").delete("\r")
-    #   bulletins << bulletin
-    #   bulletin_number = bulletin_number + 1
-    # end
-
-    # while !page.parser.xpath("//*[@id='tabs']/div[#{tab_number}]/div[#{bulletin_number}]").empty?
-    #   bulletin = Hash.new
-    #   bulletin[:title] = page.parser.xpath("//*[@id='tabs']/div[#{tab_number}]/div[#{bulletin_number}]/p/a[1]").text
-    #   bulletin_details = page.parser.xpath("//*[@id='tabs']/div[#{tab_number}]/div[#{bulletin_number}]/div/div/text()").text.split("\r\n        ").delete_if(&:empty?)
-    #   #remember to add android autolink
-    #   bulletin[:posted_date] = bulletin_details[0].split(" ")[2..5].join(" ")
-    #   bulletin[:expired_date] = bulletin_details[1].split(" : ")[1]
-    #   bulletin[:author] = bulletin_details[2].split(" : ")[1].delete("\t")
-    #   page.parser.xpath("//*[@id='tabs']/div[1]/div[2]/div/div/div")
-    #   bulletin[:contents] = page.parser.xpath("//*[@id='tabs']/div[#{tab_number}]/div[#{bulletin_number}]/div/div/div").text.delete("\t").delete("\r")
-    #   bulletins << bulletin
-    #   bulletin_number = bulletin_number + 1
-    # end
-    
-    # render :json => JSON.pretty_generate(bulletins.as_json)
+    render json: JSON.pretty_generate( Bulletin.order(posted_date: :desc, url: :desc).limit(20).as_json( except: [:created_at, :updated_at, :id]) )
   end
 
   def mmls_refresh_subject
