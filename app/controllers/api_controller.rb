@@ -248,7 +248,7 @@ class ApiController < ApplicationController
   end
 
   def bulletin
-    render json: JSON.pretty_generate( Bulletin.order(posted_date: :desc, url: :desc).limit(20).as_json( except: [:created_at, :updated_at, :id]) )
+    render json: JSON.pretty_generate( Bulletin.order(url: :desc).limit(5).as_json( except: [:created_at, :updated_at, :id]) )
   end
 
   def mmls_refresh_subject
