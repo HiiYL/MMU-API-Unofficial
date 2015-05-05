@@ -1,7 +1,5 @@
 class ApiController < ApplicationController
   skip_before_action :verify_authenticity_token
-
-
   def update_bulletin
     agent = Mechanize.new
     page = agent.get("https://online.mmu.edu.my/index.php")
@@ -251,6 +249,9 @@ class ApiController < ApplicationController
     url = params[:subject_url]
     name = "laravel_session"
     value = params[:cookie]
+    if !params[:last_sync].blank?
+      last_sync = Time.parse(params[:last_sync])
+    end
     domain = "mmls.mmu.edu.my"
     cookie = Mechanize::Cookie.new :domain => domain, :name => name, :value => value, :path => '/', :expires => (Date.today + 1).to_s
     agent = Mechanize.new
@@ -270,27 +271,39 @@ class ApiController < ApplicationController
         announcement_number = 1
         announcement_generic_path = page.parser.xpath("//*[@id='accordion']/div[#{week_number}]/div[2]/div/div/div[1]")
         while !announcement_generic_path.xpath("div[#{announcement_number}]/font").empty? do
-          announcement = week.announcements.build
-          announcement.title = announcement_generic_path.xpath("div[#{announcement_number}]/font").inner_text.delete("\r").delete("\t")
-          contents = announcement_generic_path.xpath("div[#{announcement_number}]").children[7..-1]
-          sanitized_contents = Sanitize.clean(contents, :remove_contents => ['script', 'style'])
-          announcement.contents = sanitized_contents.delete("\r\t")
-          announcement.author = announcement_generic_path.xpath("div[#{announcement_number}]/div[1]/i[1]").text.delete("\r\n\t\t\t\t\t;").split("  ").first[3..-1]
-          announcement.posted_date = announcement_generic_path.xpath("div[#{announcement_number}]/div[1]/i[1]").text.delete("\r").delete("\n").delete("\t").split("               ").last
-
-          if !announcement_generic_path.xpath("div[#{announcement_number}]").at('form').nil?
-            print("FILES EXISTS !!!")
-            form_nok = announcement_generic_path.xpath("div[#{announcement_number}]").at('form')
-            form = Mechanize::Form.new form_nok, agent, page
-            file_details_hash =  Hash[form.keys.zip(form.values)]
-            file = announcement.subject_files.build
-            file.file_name = file_details_hash["file_name"]
-            file.token = file_details_hash["_token"]
-            file.content_id = file_details_hash["content_id"]
-            file.content_type = file_details_hash["content_type"]
-            file.file_path = file_details_hash["file_path"]
+          posted_date = announcement_generic_path.xpath("div[#{announcement_number}]/div[1]/i[1]").text.delete("\r").delete("\n").delete("\t").split("               ").last
+          valid = false
+          if(!params[:last_sync].blank?)
+            if(Time.parse(posted_date).to_date >= last_sync.to_date)
+              valid = true
+            end
+          else
+            valid = true
           end
-             announcement_number = announcement_number + 1
+
+          if(valid)
+            announcement = week.announcements.build
+            announcement.title = announcement_generic_path.xpath("div[#{announcement_number}]/font").inner_text.delete("\r").delete("\t")
+            contents = announcement_generic_path.xpath("div[#{announcement_number}]").children[7..-1]
+            sanitized_contents = Sanitize.clean(contents, :remove_contents => ['script', 'style'])
+            announcement.contents = sanitized_contents.delete("\r\t")
+            announcement.author = announcement_generic_path.xpath("div[#{announcement_number}]/div[1]/i[1]").text.delete("\r\n\t\t\t\t\t;").split("  ").first[3..-1]
+            announcement.posted_date = posted_date
+
+            if !announcement_generic_path.xpath("div[#{announcement_number}]").at('form').nil?
+              print("FILES EXISTS !!!")
+              form_nok = announcement_generic_path.xpath("div[#{announcement_number}]").at('form')
+              form = Mechanize::Form.new form_nok, agent, page
+              file_details_hash =  Hash[form.keys.zip(form.values)]
+              file = announcement.subject_files.build
+              file.file_name = file_details_hash["file_name"]
+              file.token = file_details_hash["_token"]
+              file.content_id = file_details_hash["content_id"]
+              file.content_type = file_details_hash["content_type"]
+              file.file_path = file_details_hash["file_path"]
+            end
+          end
+          announcement_number = announcement_number + 1
         end
           week_number = week_number + 1
        end
