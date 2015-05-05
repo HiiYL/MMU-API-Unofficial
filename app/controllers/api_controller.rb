@@ -140,7 +140,7 @@ class ApiController < ApplicationController
     token = form._token
     form.stud_id = params[:student_id]
     form.stud_pswrd = params[:password]
-    agent.submit(form)
+    page = agent.submit(form)
     laravel_cookie = agent.cookie_jar.first.value
     unless page.parser.xpath('//*[@id="alert"]').empty?
       render json: {message: "Incorrect MMLS username or password", status: 400}, status:400
@@ -252,7 +252,6 @@ class ApiController < ApplicationController
   end
 
   def mmls_refresh_subject
-    #url = params[:subject_uri]
     url = params[:subject_url]
     name = "laravel_session"
     value = params[:cookie]
