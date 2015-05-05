@@ -142,11 +142,7 @@ class ApiController < ApplicationController
     form.stud_pswrd = params[:password]
     page = agent.submit(form)
     laravel_cookie = agent.cookie_jar.first.value
-    unless page.parser.xpath('//*[@id="alert"]').empty?
-      render json: {message: "Incorrect MMLS username or password", status: 400}, status:400
-    else
-      render json: {token: form._token, cookie: laravel_cookie}
-    end
+    render json: {token: form._token, cookie: laravel_cookie}
   end
 
   # def timetable
