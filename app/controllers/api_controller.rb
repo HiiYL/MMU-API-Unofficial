@@ -18,7 +18,6 @@ class ApiController < ApplicationController
         bulletin = Bulletin.new
         bulletin.title = bulletin_post.xpath("p/a[1]").text
         bulletin_details = bulletin_post.xpath("div/div/text()").text.split("\r\n        ").delete_if(&:empty?)
-        #remember to add android autolink
         bulletin.posted_on = Time.parse(bulletin_details[0].split(" ")[2..5].join(" "))
         bulletin.url = page.parser.xpath("//*[@id='tabs-1']/div[#{bulletin_number}]/p/a/@href").text
         bulletin.expired_on = Time.parse(bulletin_details[1].split(" : ")[1])
