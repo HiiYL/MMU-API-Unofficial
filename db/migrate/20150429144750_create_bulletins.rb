@@ -2,8 +2,8 @@ class CreateBulletins < ActiveRecord::Migration
   def change
     create_table :bulletins do |t|
       t.string :title
-      t.string :posted_date
-      t.string :expired_date
+      t.datetime :posted_on
+      t.datetime :expired_on
       t.string :author
       t.string :url
       t.string :contents

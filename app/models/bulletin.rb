@@ -1,4 +1,7 @@
 class Bulletin < ActiveRecord::Base
+  def posted_date
+    posted_on.strftime("%d %b %Y")
+  end
 end
 public
 def update_bulletin

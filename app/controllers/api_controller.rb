@@ -19,16 +19,16 @@ class ApiController < ApplicationController
         bulletin.title = bulletin_post.xpath("p/a[1]").text
         bulletin_details = bulletin_post.xpath("div/div/text()").text.split("\r\n        ").delete_if(&:empty?)
         #remember to add android autolink
-        bulletin.posted_date = bulletin_details[0].split(" ")[2..5].join(" ")
+        bulletin.posted_on = Time.parse(bulletin_details[0].split(" ")[2..5].join(" "))
         bulletin.url = page.parser.xpath("//*[@id='tabs-1']/div[#{bulletin_number}]/p/a/@href").text
-        bulletin.expired_date = bulletin_details[1].split(" : ")[1]
+        bulletin.expired_on = Time.parse(bulletin_details[1].split(" : ")[1])
         bulletin.author = bulletin_details[2].split(" : ")[1].delete("\t")
         bulletin.contents = bulletin_post.xpath("div/div/div").text.delete("\t").delete("\r")
         bulletin.save
       end
       bulletin_number = bulletin_number + 1
     end
-    render json: JSON.pretty_generate( Bulletin.order(posted_date: :desc).limit(20).as_json)
+    render json: JSON.pretty_generate( Bulletin.order(url: :desc).limit(20).as_json)
   end
 
   def portal
@@ -242,7 +242,12 @@ class ApiController < ApplicationController
   end
 
   def bulletin
-    render json: JSON.pretty_generate( Bulletin.order(url: :desc).limit(20).as_json( except: [:created_at, :updated_at, :id]) )
+    if !params[:last_sync].blank?
+      last_sync = Time.parse(params[:last_sync])
+      render json: JSON.pretty_generate( Bulletin.where( "posted_on >= ?", last_sync.to_date).order(url: :desc).limit(20).as_json( methods: :posted_date,except: [:posted_on,:created_at, :updated_at, :expired_on, :id]) )
+    else
+      render json: JSON.pretty_generate( Bulletin.order(url: :desc).limit(20).as_json( methods: :posted_date, except: [:posted_on,:created_at, :updated_at, :expired_on, :id]) )
+    end
   end
 
   def mmls_refresh_subject

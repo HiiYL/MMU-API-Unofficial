@@ -25,13 +25,13 @@ ActiveRecord::Schema.define(version: 20150429144750) do
 
   create_table "bulletins", force: :cascade do |t|
     t.string   "title"
-    t.string   "posted_date"
-    t.string   "expired_date"
+    t.datetime "posted_on"
+    t.datetime "expired_on"
     t.string   "author"
     t.string   "url"
     t.string   "contents"
-    t.datetime "created_at",   null: false
-    t.datetime "updated_at",   null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
   end
 
   create_table "subject_classes", force: :cascade do |t|
