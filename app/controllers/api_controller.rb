@@ -263,7 +263,7 @@ class ApiController < ApplicationController
     agent.redirect_ok = false
     page = agent.get(url)
     if page.code != "302"
-      print "Page acquired, processing ... + \n"
+      print "Page acquired, processing .. + \n"
       original = page.parser.xpath('/html/body/div[1]/div[3]/div/div/div/div[1]')
       subject_name = page.parser.xpath("/html/body/div[1]/div[3]/div/div/div/div[1]/div[1]/h3/div").text.delete("\n\t")
       subject = Subject.new
