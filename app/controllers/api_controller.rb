@@ -243,9 +243,9 @@ class ApiController < ApplicationController
   def bulletin
     if !params[:last_sync].blank?
       last_sync = Time.parse(params[:last_sync])
-      render json: JSON.pretty_generate( Bulletin.where( "posted_on >= ?", last_sync.to_date).order(url: :desc).limit(20).as_json( methods: :posted_date,except: [:posted_on,:created_at, :updated_at, :expired_on, :id]) )
+      render json: Bulletin.where( "posted_on >= ?", last_sync.to_date).order(url: :desc).limit(20).as_json( methods: :posted_date,except: [:posted_on,:created_at, :updated_at, :expired_on, :id])
     else
-      render json: JSON.pretty_generate( Bulletin.order(url: :desc).limit(20).as_json( methods: :posted_date, except: [:posted_on,:created_at, :updated_at, :expired_on, :id]) )
+      render json: Bulletin.order(url: :desc).limit(20).as_json( methods: :posted_date, except: [:posted_on,:created_at, :updated_at, :expired_on, :id])
     end
   end
 
@@ -321,9 +321,9 @@ class ApiController < ApplicationController
          file.content_type = file_details_hash["content_type"]
          file.file_path = file_details_hash["file_path"]
        end
-       render :json => JSON.pretty_generate(subject.as_json(
+       render :json => subject.as_json(
           :include => [{ :weeks => {
-          :include => {:announcements => {:include => :subject_files} }}}, :subject_files]))
+          :include => {:announcements => {:include => :subject_files} }}}, :subject_files])
      else
        render json: {message: "Cookie Expired", status: 400}, status: 400
      end
