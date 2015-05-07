@@ -1,14 +1,4 @@
 <h1>API TEST</h1>
-<h3>MMLS FASTLOGIN TEST</h3>
-<%= form_tag login_mmls_fast_path, method: :post do %>
-  <%= label_tag :student_ID %><br>
-  <%= text_field_tag(:student_id) %><br>
-  <%= label_tag :MMLS_PASSWORD %> <br>
-  <%= password_field_tag(:password) %>
-  <%= submit_tag "Submit" %>
-<% end %>
-<br>
-<br>
 <h3>MMLS API TEST</h3>
 <%= form_tag mmls_api_path, method: :post do %>
   <%= label_tag :student_ID %><br>
