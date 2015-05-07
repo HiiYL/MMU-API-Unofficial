@@ -290,7 +290,7 @@ class ApiController < ApplicationController
             announcement.title = announcement_generic_path.xpath("div[#{announcement_number}]/font").inner_text.delete("\r").delete("\t")
             contents = announcement_generic_path.xpath("div[#{announcement_number}]").children[7..-1]
             sanitized_contents = Sanitize.clean(contents, :remove_contents => ['script', 'style'])
-            announcement.contents = sanitized_contents.delete("\r\t")
+            announcement.contents = contents.to_html.delete("\r\t")
             announcement.author = announcement_generic_path.xpath("div[#{announcement_number}]/div[1]/i[1]").text.delete("\r\n\t\t\t\t\t;").split("  ").first[3..-1]
             announcement.posted_date = posted_date
 
