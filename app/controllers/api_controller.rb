@@ -142,6 +142,38 @@ class ApiController < ApplicationController
     render json: {token: form._token, cookie: laravel_cookie}
   end
 
+  def attendence
+    agent = Mechanize.new
+    agent.agent.http.verify_mode = OpenSSL::SSL::VERIFY_NONE
+    page = agent.get("https://cms.mmu.edu.my/psp/csprd/?&cmd=login&languageCd=ENG")
+    form = page.form
+    form.userid = params[:student_id]
+    form.pwd = params[:password]
+    page = agent.submit(form)
+    page = agent.get("https://cms.mmu.edu.my/psc/csprd/EMPLOYEE/HRMS/c/N_SR_STUDENT_RECORDS.N_SR_SS_ATTEND_PCT.GBL?
+      PORTALPARAM_PTCNAV=HC_SSS_ATTENDANCE_PERCENT_GBL&EOPP.SCNode=HRMS&EOPP.SCPortal=EMPLOYEE&EOPP.SCName=
+      CO_EMPLOYEE_SELF_SERVICE&EOPP.SCLabel=Self%20Service&EOPP.SCPTfname=CO_EMPLOYEE_SELF_SERVICE&FolderPath=
+      PORTAL_ROOT_OBJECT.CO_EMPLOYEE_SELF_SERVICE.HCCC_ACADEMIC_RECORDS.HC_SSS_ATTENDANCE_PERCENT_GBL&IsFolder=
+      false&PortalActualURL=https%3a%2f%2fcms.mmu.edu.my%2fpsc%2fcsprd%2fEMPLOYEE%2fHRMS%2fc%2fN_SR_STUDENT_RECORDS.
+      _SR_SS_ATTEND_PCT.GBL&PortalContentURL=https%3a%2f%2fcms.mmu.edu.my%2fpsc%2fcsprd%2fEMPLOYEE%2fHRMS%2fc%
+      2fN_SR_STUDENT_RECORDS.N_SR_SS_ATTEND_PCT.GBL&PortalContentProvider=HRMS&PortalCRefLabel=Attendance%
+      20Percentage%20by%20class&PortalRegistryName=EMPLOYEE&PortalServletURI=https%3a%2f%2fcms.mmu.edu.my
+      %2fpsp%2fcsprd%2f&PortalURI=https%3a%2f%2fcms.mmu.edu.my%2fpsc%2fcsprd%2f&PortalHostNode=HRMS&NoCrumbs=yes
+      &PortalKeyStruct=yes")
+    subjects_attendence = []
+    attendence_table = page.parser.xpath('//*[@id="N_STN_ENRL_SSVW$scroll$0"]')
+    attendence_table_fields = attendence_table.xpath("tr[2]").text.split("\n").reject!(&:empty?)
+    current_row = 3
+    while(!attendence_table.xpath("tr[#{current_row}]").empty? ) do
+      subject_row = attendence_table.xpath("tr[#{current_row}]").text.split("\n").reject!(&:empty?)
+      subject_is_not_barred = attendence_table.xpath("tr[#{current_row}]/td[6]/div/input").attr('value').value == "Y"? "false" : "true"
+      subject_row.insert(5, subject_is_not_barred)
+      subjects_attendence << Hash[attendence_table_fields.zip(subject_row)]
+      current_row = current_row + 1
+    end
+    render json: JSON.pretty_generate(subjects_attendence.as_json)
+  end
+
   # def timetable
   # 	agent = Mechanize.new
   #   agent.agent.http.verify_mode = OpenSSL::SSL::VERIFY_NONE
