@@ -174,6 +174,21 @@ class ApiController < ApplicationController
     render json: JSON.pretty_generate(subjects_attendence.as_json)
   end
 
+  def login_camsys
+    agent = Mechanize.new
+    agent.agent.http.verify_mode = OpenSSL::SSL::VERIFY_NONE
+    page = agent.get("https://cms.mmu.edu.my/psp/csprd/?&cmd=login&languageCd=ENG")
+    form = page.form
+    form.userid = params[:student_id]
+    form.pwd = params[:password]
+    page = agent.submit(form)
+    if page.parser.xpath('//*[@id="login_error"]').empty?
+      render json: {success: "Successful CAMSYS Login", status: 100}
+    else
+      render json: {error: "Incorrect CAMSYS username or password", status: 400}
+    end
+  end
+
   # def timetable
   # 	agent = Mechanize.new
   #   agent.agent.http.verify_mode = OpenSSL::SSL::VERIFY_NONE
@@ -359,22 +374,6 @@ class ApiController < ApplicationController
      else
        render json: {message: "Cookie Expired", status: 400}, status: 400
      end
-  end
-
-  def login_camsys_test
-    agent = Mechanize.new
-    agent.agent.http.verify_mode = OpenSSL::SSL::VERIFY_NONE
-    page = agent.get("https://cms.mmu.edu.my")
-    form = page.form
-    form.userid = params[:student_id] ||= ENV['STUDENT_ID']
-    form.pwd = params[:password] ||= ENV['CAMSYS_PASSWORD']
-    page = agent.submit(form)
-    subjects = []
-    if page.parser.xpath('//*[@id="login_error"]').empty?
-      render json: {success: "Successful CAMSYS Login", status: 100}
-    else
-      render json: {error: "Incorrect CAMSYS username or password", status: 400}
-    end
   end
 
   private
