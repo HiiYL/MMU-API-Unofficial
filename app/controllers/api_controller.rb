@@ -206,7 +206,7 @@ class ApiController < ApplicationController
       end
       render json: JSON.pretty_generate(subjects_attendence.as_json)
     else
-      render json: {error: "Incorrect CAMSYS username or password", status: 400}
+      render json: {error: "Incorrect CAMSYS username or password", status: 400}, status: 400
     end
   end
 
