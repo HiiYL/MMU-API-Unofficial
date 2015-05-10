@@ -23,10 +23,9 @@ def update_bulletin
         bulletin = Bulletin.new
         bulletin.title = bulletin_post.xpath("p/a[1]").text
         bulletin_details = bulletin_post.xpath("div/div/text()").text.split("\r\n        ").delete_if(&:empty?)
-        #remember to add android autolink
-        bulletin.posted_date = bulletin_details[0].split(" ")[2..5].join(" ")
+        bulletin.posted_on = Time.parse(bulletin_details[0].split(" ")[2..5].join(" "))
         bulletin.url = page.parser.xpath("//*[@id='tabs-1']/div[#{bulletin_number}]/p/a/@href").text
-        bulletin.expired_date = bulletin_details[1].split(" : ")[1]
+        bulletin.expired_on = Time.parse(bulletin_details[1].split(" : ")[1])
         bulletin.author = bulletin_details[2].split(" : ")[1].delete("\t")
         bulletin.contents = bulletin_post.xpath("div/div/div").text.delete("\t").delete("\r")
         bulletin.save
