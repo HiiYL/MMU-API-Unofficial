@@ -30,33 +30,33 @@ class ApiController < ApplicationController
     render json: JSON.pretty_generate( Bulletin.order(url: :desc).limit(20).as_json)
   end
 
-  def portal
-    bulletins = []
-    agent = Mechanize.new
-    page = agent.get("https://online.mmu.edu.my/index.php")
-    form = page.form
-    # form.form_loginUsername = params[:student_id]
-    #form.form_loginUsername =  ENV['STUDENT_ID']
-    form.form_loginPassword = params[:password]
-    #form.form_loginPassword = ENV['PORTAL_PASSWORD']
-    page = agent.submit(form)
-    tab_number = 1
-    bulletin_number = 1
-    while !page.parser.xpath("//*[@id='tabs']/div[#{tab_number}]/div[#{bulletin_number}]").empty?
-      bulletin = Hash.new
-      bulletin[:title] = page.parser.xpath("//*[@id='tabs']/div[#{tab_number}]/div[#{bulletin_number}]/p/a[1]").text
-      bulletin_details = page.parser.xpath("//*[@id='tabs']/div[#{tab_number}]/div[#{bulletin_number}]/div/div/text()").text.split("\r\n        ").delete_if(&:empty?)
-      #remember to add android autolink
-      bulletin[:posted_date] = bulletin_details[0].split(" ")[2..5].join(" ")
-      bulletin[:expired_date] = bulletin_details[1].split(" : ")[1]
-      bulletin[:author] = bulletin_details[2].split(" : ")[1].delete("\t")
-      page.parser.xpath("//*[@id='tabs']/div[1]/div[2]/div/div/div")
-      bulletin[:contents] = page.parser.xpath("//*[@id='tabs']/div[#{tab_number}]/div[#{bulletin_number}]/div/div/div").text.delete("\t").delete("\r")
-      bulletins << bulletin
-      bulletin_number = bulletin_number + 1
-    end
-    render :json => JSON.pretty_generate(bulletins.as_json)
-  end
+  # def portal
+  #   bulletins = []
+  #   agent = Mechanize.new
+  #   page = agent.get("https://online.mmu.edu.my/index.php")
+  #   form = page.form
+  #   # form.form_loginUsername = params[:student_id]
+  #   #form.form_loginUsername =  ENV['STUDENT_ID']
+  #   form.form_loginPassword = params[:password]
+  #   #form.form_loginPassword = ENV['PORTAL_PASSWORD']
+  #   page = agent.submit(form)
+  #   tab_number = 1
+  #   bulletin_number = 1
+  #   while !page.parser.xpath("//*[@id='tabs']/div[#{tab_number}]/div[#{bulletin_number}]").empty?
+  #     bulletin = Hash.new
+  #     bulletin[:title] = page.parser.xpath("//*[@id='tabs']/div[#{tab_number}]/div[#{bulletin_number}]/p/a[1]").text
+  #     bulletin_details = page.parser.xpath("//*[@id='tabs']/div[#{tab_number}]/div[#{bulletin_number}]/div/div/text()").text.split("\r\n        ").delete_if(&:empty?)
+  #     #remember to add android autolink
+  #     bulletin[:posted_date] = bulletin_details[0].split(" ")[2..5].join(" ")
+  #     bulletin[:expired_date] = bulletin_details[1].split(" : ")[1]
+  #     bulletin[:author] = bulletin_details[2].split(" : ")[1].delete("\t")
+  #     page.parser.xpath("//*[@id='tabs']/div[1]/div[2]/div/div/div")
+  #     bulletin[:contents] = page.parser.xpath("//*[@id='tabs']/div[#{tab_number}]/div[#{bulletin_number}]/div/div/div").text.delete("\t").delete("\r")
+  #     bulletins << bulletin
+  #     bulletin_number = bulletin_number + 1
+  #   end
+  #   render :json => JSON.pretty_generate(bulletins.as_json)
+  # end
 
   # def mmls
   #   print "HELLO?"
