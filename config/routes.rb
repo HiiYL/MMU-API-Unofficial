@@ -2,6 +2,7 @@ Rails.application.routes.draw do
   get 'update_bulletin' => 'api#update_bulletin'
   post 'login_mmls' => 'api#login_mmls'
   post 'login_camsys' => 'api#login_camsys'
+  post 'login_camsys_v2' => 'api#login_camsys_v2'
   get 'mmls_api' => 'api#mmls'
   post 'mmls_api' => 'api#mmls'
   get 'bulletin_api' => 'api#bulletin'
