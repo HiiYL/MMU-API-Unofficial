@@ -220,6 +220,27 @@ class ApiController < ApplicationController
         amount_due = page.parser.xpath('//*[@id="SSF_SS_DERIVED_SSF_AMOUNT_TOTAL2"]').text
         response[:amount_due] = amount_due
       end
+      page = agent.get("https://cms.mmu.edu.my/psc/csprd/EMPLOYEE/HRMS/c/N_MANAGE_EXAMS.N_SS_EXAM_TIMETBL.GBL?
+        PORTALPARAM_PTCNAV=N_SS_EXAM_TIMETBL_GBL&EOPP.SCNode=HRMS&EOPP.SCPortal=EMPLOYEE&EOPP.SCName
+        =CO_EMPLOYEE_SELF_SERVICE&EOPP.SCLabel=Self%20Service&EOPP.SCPTfname=CO_EMPLOYEE_SELF_SERVICE&
+        FolderPath=PORTAL_ROOT_OBJECT.CO_EMPLOYEE_SELF_SERVICE.N_SS_EXAM_TIMETBL_GBL&IsFolder=false&
+        PortalActualURL=https%3a%2f%2fcms.mmu.edu.my%2fpsc%2fcsprd%2fEMPLOYEE%2fHRMS%2fc%2fN_MANAGE_EXAMS.
+        N_SS_EXAM_TIMETBL.GBL&PortalContentURL=https%3a%2f%2fcms.mmu.edu.my%2fpsc%2fcsprd%2fEMPLOYEE%2fHRMS%
+        2fc%2fN_MANAGE_EXAMS.N_SS_EXAM_TIMETBL.GBL&PortalContentProvider=HRMS&PortalCRefLabel=My%20Exam%
+        20Timetable&PortalRegistryName=EMPLOYEE&PortalServletURI=https%3a%2f%2fcms.mmu.edu.my%2fpsp%2fcsprd%
+        2f&PortalURI=https%3a%2f%2fcms.mmu.edu.my%2fpsc%2fcsprd%2f&PortalHostNode=HRMS&NoCrumbs=yes&
+        PortalKeyStruct=yes")
+      exam_table = page.parser.xpath('//*[@id="N_SS_EXAM_TTBL$scroll$0"]/tr[2]/td/table')
+      exam_table_fields = exam_table.xpath('tr[1]').text.split("\n").reject!(&:blank?)
+      exam_timetable = []
+      current_row = 2
+      while(!exam_table.xpath("tr[#{current_row}]").empty? ) do
+        exam_row = exam_table.xpath("tr[#{current_row}]").text.split("\n").reject!(&:blank?)[1..-1]
+        exam_timetable << Hash[exam_table_fields.zip(exam_row)]
+        current_row = current_row + 1
+      end
+      response[:exam_timetable] = exam_timetable
+
       agent.get("https://cms.mmu.edu.my/psp/csprd/EMPLOYEE/HRMS/?cmd=logout")
 
       render json: JSON.pretty_generate(response.as_json)
