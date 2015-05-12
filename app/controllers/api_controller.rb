@@ -218,7 +218,7 @@ class ApiController < ApplicationController
         PortalHostNode=HRMS&NoCrumbs=yes&PortalKeyStruct=yes")
       if(!page.parser.xpath('//*[@id="SSF_SS_DERIVED_SSF_AMOUNT_TOTAL2"]').blank?)
         amount_due = page.parser.xpath('//*[@id="SSF_SS_DERIVED_SSF_AMOUNT_TOTAL2"]').text
-        response[:amount_due] << amount_due
+        response[:amount_due] = amount_due
       end
       agent.get("https://cms.mmu.edu.my/psp/csprd/EMPLOYEE/HRMS/?cmd=logout")
 
