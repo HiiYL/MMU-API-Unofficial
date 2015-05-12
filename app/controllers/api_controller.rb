@@ -142,7 +142,7 @@ class ApiController < ApplicationController
     render json: {token: form._token, cookie: laravel_cookie}
   end
 
-  def attendence
+  def attendance
     agent = Mechanize.new
     agent.agent.http.verify_mode = OpenSSL::SSL::VERIFY_NONE
     page = agent.get("https://cms.mmu.edu.my/psp/csprd/?&cmd=login&languageCd=ENG")
@@ -151,27 +151,27 @@ class ApiController < ApplicationController
     form.pwd = params[:password]
     page = agent.submit(form)
     page = agent.get("https://cms.mmu.edu.my/psc/csprd/EMPLOYEE/HRMS/c/N_SR_STUDENT_RECORDS.N_SR_SS_ATTEND_PCT.GBL?
-      PORTALPARAM_PTCNAV=HC_SSS_ATTENDANCE_PERCENT_GBL&EOPP.SCNode=HRMS&EOPP.SCPortal=EMPLOYEE&EOPP.SCName=
+      PORTALPARAM_PTCNAV=HC_SSS_attendance_PERCENT_GBL&EOPP.SCNode=HRMS&EOPP.SCPortal=EMPLOYEE&EOPP.SCName=
       CO_EMPLOYEE_SELF_SERVICE&EOPP.SCLabel=Self%20Service&EOPP.SCPTfname=CO_EMPLOYEE_SELF_SERVICE&FolderPath=
-      PORTAL_ROOT_OBJECT.CO_EMPLOYEE_SELF_SERVICE.HCCC_ACADEMIC_RECORDS.HC_SSS_ATTENDANCE_PERCENT_GBL&IsFolder=
+      PORTAL_ROOT_OBJECT.CO_EMPLOYEE_SELF_SERVICE.HCCC_ACADEMIC_RECORDS.HC_SSS_attendance_PERCENT_GBL&IsFolder=
       false&PortalActualURL=https%3a%2f%2fcms.mmu.edu.my%2fpsc%2fcsprd%2fEMPLOYEE%2fHRMS%2fc%2fN_SR_STUDENT_RECORDS.
       _SR_SS_ATTEND_PCT.GBL&PortalContentURL=https%3a%2f%2fcms.mmu.edu.my%2fpsc%2fcsprd%2fEMPLOYEE%2fHRMS%2fc%
-      2fN_SR_STUDENT_RECORDS.N_SR_SS_ATTEND_PCT.GBL&PortalContentProvider=HRMS&PortalCRefLabel=Attendance%
+      2fN_SR_STUDENT_RECORDS.N_SR_SS_ATTEND_PCT.GBL&PortalContentProvider=HRMS&PortalCRefLabel=attendance%
       20Percentage%20by%20class&PortalRegistryName=EMPLOYEE&PortalServletURI=https%3a%2f%2fcms.mmu.edu.my
       %2fpsp%2fcsprd%2f&PortalURI=https%3a%2f%2fcms.mmu.edu.my%2fpsc%2fcsprd%2f&PortalHostNode=HRMS&NoCrumbs=yes
       &PortalKeyStruct=yes")
-    subjects_attendence = []
-    attendence_table = page.parser.xpath('//*[@id="N_STN_ENRL_SSVW$scroll$0"]')
-    attendence_table_fields = attendence_table.xpath("tr[2]").text.split("\n").reject!(&:empty?)
+    subjects_attendance = []
+    attendance_table = page.parser.xpath('//*[@id="N_STN_ENRL_SSVW$scroll$0"]')
+    attendance_table_fields = attendance_table.xpath("tr[2]").text.split("\n").reject!(&:empty?)
     current_row = 3
-    while(!attendence_table.xpath("tr[#{current_row}]").empty? ) do
-      subject_row = attendence_table.xpath("tr[#{current_row}]").text.split("\n").reject!(&:empty?)
-      subject_is_not_barred = attendence_table.xpath("tr[#{current_row}]/td[6]/div/input").attr('value').value == "Y"? "false" : "true"
+    while(!attendance_table.xpath("tr[#{current_row}]").empty? ) do
+      subject_row = attendance_table.xpath("tr[#{current_row}]").text.split("\n").reject!(&:empty?)
+      subject_is_not_barred = attendance_table.xpath("tr[#{current_row}]/td[6]/div/input").attr('value').value == "Y"? "false" : "true"
       subject_row.insert(5, subject_is_not_barred)
-      subjects_attendence << Hash[attendence_table_fields.zip(subject_row)]
+      subjects_attendance << Hash[attendance_table_fields.zip(subject_row)]
       current_row = current_row + 1
     end
-    render json: JSON.pretty_generate(subjects_attendence.as_json)
+    render json: JSON.pretty_generate(subjects_attendance.as_json)
   end
 
   def login_camsys_v2
@@ -185,27 +185,27 @@ class ApiController < ApplicationController
     if page.parser.xpath('//*[@id="login_error"]').empty?
       response = {}
       page = agent.get("https://cms.mmu.edu.my/psc/csprd/EMPLOYEE/HRMS/c/N_SR_STUDENT_RECORDS.N_SR_SS_ATTEND_PCT.GBL?
-        PORTALPARAM_PTCNAV=HC_SSS_ATTENDANCE_PERCENT_GBL&EOPP.SCNode=HRMS&EOPP.SCPortal=EMPLOYEE&EOPP.SCName=
+        PORTALPARAM_PTCNAV=HC_SSS_attendance_PERCENT_GBL&EOPP.SCNode=HRMS&EOPP.SCPortal=EMPLOYEE&EOPP.SCName=
         CO_EMPLOYEE_SELF_SERVICE&EOPP.SCLabel=Self%20Service&EOPP.SCPTfname=CO_EMPLOYEE_SELF_SERVICE&FolderPath=
-        PORTAL_ROOT_OBJECT.CO_EMPLOYEE_SELF_SERVICE.HCCC_ACADEMIC_RECORDS.HC_SSS_ATTENDANCE_PERCENT_GBL&IsFolder=
+        PORTAL_ROOT_OBJECT.CO_EMPLOYEE_SELF_SERVICE.HCCC_ACADEMIC_RECORDS.HC_SSS_attendance_PERCENT_GBL&IsFolder=
         false&PortalActualURL=https%3a%2f%2fcms.mmu.edu.my%2fpsc%2fcsprd%2fEMPLOYEE%2fHRMS%2fc%2fN_SR_STUDENT_RECORDS.
         _SR_SS_ATTEND_PCT.GBL&PortalContentURL=https%3a%2f%2fcms.mmu.edu.my%2fpsc%2fcsprd%2fEMPLOYEE%2fHRMS%2fc%
-        2fN_SR_STUDENT_RECORDS.N_SR_SS_ATTEND_PCT.GBL&PortalContentProvider=HRMS&PortalCRefLabel=Attendance%
+        2fN_SR_STUDENT_RECORDS.N_SR_SS_ATTEND_PCT.GBL&PortalContentProvider=HRMS&PortalCRefLabel=attendance%
         20Percentage%20by%20class&PortalRegistryName=EMPLOYEE&PortalServletURI=https%3a%2f%2fcms.mmu.edu.my
         %2fpsp%2fcsprd%2f&PortalURI=https%3a%2f%2fcms.mmu.edu.my%2fpsc%2fcsprd%2f&PortalHostNode=HRMS&NoCrumbs=yes
         &PortalKeyStruct=yes")
-      subjects_attendence = []
-      attendence_table = page.parser.xpath('//*[@id="N_STN_ENRL_SSVW$scroll$0"]')
-      attendence_table_fields = attendence_table.xpath("tr[2]").text.split("\n").reject!(&:empty?)
+      subjects_attendance = []
+      attendance_table = page.parser.xpath('//*[@id="N_STN_ENRL_SSVW$scroll$0"]')
+      attendance_table_fields = attendance_table.xpath("tr[2]").text.split("\n").reject!(&:empty?)
       current_row = 3
-      while(!attendence_table.xpath("tr[#{current_row}]").empty? ) do
-        subject_row = attendence_table.xpath("tr[#{current_row}]").text.split("\n").reject!(&:empty?)
-        subject_is_not_barred = attendence_table.xpath("tr[#{current_row}]/td[6]/div/input").attr('value').value == "Y"? "false" : "true"
+      while(!attendance_table.xpath("tr[#{current_row}]").empty? ) do
+        subject_row = attendance_table.xpath("tr[#{current_row}]").text.split("\n").reject!(&:empty?)
+        subject_is_not_barred = attendance_table.xpath("tr[#{current_row}]/td[6]/div/input").attr('value').value == "Y"? "false" : "true"
         subject_row.insert(5, subject_is_not_barred)
-        subjects_attendence << Hash[attendence_table_fields.zip(subject_row)]
+        subjects_attendance << Hash[attendance_table_fields.zip(subject_row)]
         current_row = current_row + 1
       end
-      response[:subjects_attendence] = subjects_attendence
+      response[:subjects_attendance] = subjects_attendance
       page = agent.get("https://cms.mmu.edu.my/psc/csprd/EMPLOYEE/HRMS/c/SA_LEARNER_SERVICES.N_SSF_ACNT_SUMMARY.GBL?
         PORTALPARAM_PTCNAV=N_SSF_ACNT_SUMMARY_GBL&EOPP.SCNode=HRMS&EOPP.SCPortal=EMPLOYEE&EOPP.SCName=
         CO_EMPLOYEE_SELF_SERVICE&EOPP.SCLabel=Campus%20Finances&EOPP.SCFName=HCCC_FINANCES&EOPP.SCSecondary=true
@@ -259,28 +259,28 @@ class ApiController < ApplicationController
     page = agent.submit(form)
     if page.parser.xpath('//*[@id="login_error"]').empty?
       page = agent.get("https://cms.mmu.edu.my/psc/csprd/EMPLOYEE/HRMS/c/N_SR_STUDENT_RECORDS.N_SR_SS_ATTEND_PCT.GBL?
-        PORTALPARAM_PTCNAV=HC_SSS_ATTENDANCE_PERCENT_GBL&EOPP.SCNode=HRMS&EOPP.SCPortal=EMPLOYEE&EOPP.SCName=
+        PORTALPARAM_PTCNAV=HC_SSS_attendance_PERCENT_GBL&EOPP.SCNode=HRMS&EOPP.SCPortal=EMPLOYEE&EOPP.SCName=
         CO_EMPLOYEE_SELF_SERVICE&EOPP.SCLabel=Self%20Service&EOPP.SCPTfname=CO_EMPLOYEE_SELF_SERVICE&FolderPath=
-        PORTAL_ROOT_OBJECT.CO_EMPLOYEE_SELF_SERVICE.HCCC_ACADEMIC_RECORDS.HC_SSS_ATTENDANCE_PERCENT_GBL&IsFolder=
+        PORTAL_ROOT_OBJECT.CO_EMPLOYEE_SELF_SERVICE.HCCC_ACADEMIC_RECORDS.HC_SSS_attendance_PERCENT_GBL&IsFolder=
         false&PortalActualURL=https%3a%2f%2fcms.mmu.edu.my%2fpsc%2fcsprd%2fEMPLOYEE%2fHRMS%2fc%2fN_SR_STUDENT_RECORDS.
         _SR_SS_ATTEND_PCT.GBL&PortalContentURL=https%3a%2f%2fcms.mmu.edu.my%2fpsc%2fcsprd%2fEMPLOYEE%2fHRMS%2fc%
-        2fN_SR_STUDENT_RECORDS.N_SR_SS_ATTEND_PCT.GBL&PortalContentProvider=HRMS&PortalCRefLabel=Attendance%
+        2fN_SR_STUDENT_RECORDS.N_SR_SS_ATTEND_PCT.GBL&PortalContentProvider=HRMS&PortalCRefLabel=attendance%
         20Percentage%20by%20class&PortalRegistryName=EMPLOYEE&PortalServletURI=https%3a%2f%2fcms.mmu.edu.my
         %2fpsp%2fcsprd%2f&PortalURI=https%3a%2f%2fcms.mmu.edu.my%2fpsc%2fcsprd%2f&PortalHostNode=HRMS&NoCrumbs=yes
         &PortalKeyStruct=yes")
-      subjects_attendence = []
-      attendence_table = page.parser.xpath('//*[@id="N_STN_ENRL_SSVW$scroll$0"]')
-      attendence_table_fields = attendence_table.xpath("tr[2]").text.split("\n").reject!(&:empty?)
+      subjects_attendance = []
+      attendance_table = page.parser.xpath('//*[@id="N_STN_ENRL_SSVW$scroll$0"]')
+      attendance_table_fields = attendance_table.xpath("tr[2]").text.split("\n").reject!(&:empty?)
       current_row = 3
-      while(!attendence_table.xpath("tr[#{current_row}]").empty? ) do
-        subject_row = attendence_table.xpath("tr[#{current_row}]").text.split("\n").reject!(&:empty?)
-        subject_is_not_barred = attendence_table.xpath("tr[#{current_row}]/td[6]/div/input").attr('value').value == "Y"? "false" : "true"
+      while(!attendance_table.xpath("tr[#{current_row}]").empty? ) do
+        subject_row = attendance_table.xpath("tr[#{current_row}]").text.split("\n").reject!(&:empty?)
+        subject_is_not_barred = attendance_table.xpath("tr[#{current_row}]/td[6]/div/input").attr('value').value == "Y"? "false" : "true"
         subject_row.insert(5, subject_is_not_barred)
-        subjects_attendence << Hash[attendence_table_fields.zip(subject_row)]
+        subjects_attendance << Hash[attendance_table_fields.zip(subject_row)]
         current_row = current_row + 1
       end
       agent.get("https://cms.mmu.edu.my/psp/csprd/EMPLOYEE/HRMS/?cmd=logout")
-      render json: JSON.pretty_generate(subjects_attendence.as_json)
+      render json: JSON.pretty_generate(subjects_attendance.as_json)
     else
       render json: {error: "Incorrect CAMSYS username or password", status: 400}, status: 400
     end
