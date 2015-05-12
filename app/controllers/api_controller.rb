@@ -174,6 +174,10 @@ class ApiController < ApplicationController
     render json: JSON.pretty_generate(subjects_attendence.as_json)
   end
 
+  def get_account_summary
+
+  end
+
   def login_camsys
     agent = Mechanize.new
     agent.agent.http.verify_mode = OpenSSL::SSL::VERIFY_NONE
@@ -204,6 +208,7 @@ class ApiController < ApplicationController
         subjects_attendence << Hash[attendence_table_fields.zip(subject_row)]
         current_row = current_row + 1
       end
+      agent.get("https://cms.mmu.edu.my/psp/csprd/EMPLOYEE/HRMS/?cmd=logout")
       render json: JSON.pretty_generate(subjects_attendence.as_json)
     else
       render json: {error: "Incorrect CAMSYS username or password", status: 400}, status: 400
