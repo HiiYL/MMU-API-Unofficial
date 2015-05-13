@@ -216,8 +216,10 @@ class ApiController < ApplicationController
         PortalContentProvider=HRMS&PortalCRefLabel=Account%20Enquiry&PortalRegistryName=EMPLOYEE&
         PortalServletURI=https%3a%2f%2fcms.mmu.edu.my%2fpsp%2fcsprd%2f&PortalURI=https%3a%2f%2fcms.mmu.edu.my%2fpsc%2fcsprd%2f&
         PortalHostNode=HRMS&NoCrumbs=yes&PortalKeyStruct=yes")
-      if(!page.parser.xpath('//*[@id="SSF_SS_DERIVED_SSF_AMOUNT_TOTAL2"]').blank?)
-        amount_due = page.parser.xpath('//*[@id="SSF_SS_DERIVED_SSF_AMOUNT_TOTAL2"]').text
+      # if(!page.parser.xpath('//*[@id="SSF_SS_DERIVED_SSF_AMOUNT_TOTAL2"]').blank?)
+      #   amount_due = page.parser.xpath('//*[@id="SSF_SS_DERIVED_SSF_AMOUNT_TOTAL2"]').text
+      if(!page.parser.xpath('//*[@id="N_CUST_SS_DRVD_ACCOUNT_BALANCE"]').blank?)
+        amount_due = page.parser.xpath('//*[@id="N_CUST_SS_DRVD_ACCOUNT_BALANCE"]').text
         response[:amount_due] = amount_due
       end
       page = agent.get("https://cms.mmu.edu.my/psc/csprd/EMPLOYEE/HRMS/c/N_MANAGE_EXAMS.N_SS_EXAM_TIMETBL.GBL?
