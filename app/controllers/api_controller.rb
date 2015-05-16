@@ -27,7 +27,7 @@ class ApiController < ApplicationController
       end
       bulletin_number = bulletin_number + 1
     end
-    render json: JSON.pretty_generate( Bulletin.order(url: :desc).limit(20).as_json)
+    render json: JSON.pretty_generate( Bulletin.order(posted_on: :desc,url: :desc).limit(20).as_json)
   end
 
   # def portal
@@ -389,9 +389,9 @@ class ApiController < ApplicationController
   def bulletin
     if !params[:last_sync].blank?
       last_sync = Time.parse(params[:last_sync])
-      render json: Bulletin.where( "posted_on >= ?", last_sync.to_date).order(url: :desc).limit(20).as_json( methods: :posted_date,except: [:posted_on,:created_at, :updated_at, :expired_on, :id])
+      render json: Bulletin.where( "posted_on >= ?", last_sync.to_date).order(posted_on: :desc, url: :desc).limit(20).as_json( methods: :posted_date,except: [:posted_on,:created_at, :updated_at, :expired_on, :id])
     else
-      render json: Bulletin.order(url: :desc).limit(20).as_json( methods: :posted_date, except: [:posted_on,:created_at, :updated_at, :expired_on, :id])
+      render json: Bulletin.order(posted_on: :desc,url: :desc).limit(20).as_json( methods: :posted_date, except: [:posted_on,:created_at, :updated_at, :expired_on, :id])
     end
   end
 
