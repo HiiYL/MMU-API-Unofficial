@@ -387,6 +387,7 @@ class ApiController < ApplicationController
   end
 
   def bulletin
+    headers['Access-Control-Allow-Origin'] = "*"
     if !params[:last_sync].blank?
       last_sync = Time.parse(params[:last_sync])
       render json: Bulletin.where( "posted_on >= ?", last_sync.to_date).order(posted_on: :desc, url: :desc).limit(20).as_json( methods: :posted_date,except: [:posted_on,:created_at, :updated_at, :expired_on, :id])
