@@ -58,77 +58,77 @@ class ApiController < ApplicationController
   #   render :json => JSON.pretty_generate(bulletins.as_json)
   # end
 
-  # def mmls
-  #   print "HELLO?"
-  #   agent = Mechanize.new
-  #   page = agent.get("https://mmls.mmu.edu.my")
-  #   form = page.form
-  #   form.stud_id = params[:student_id] ||= ENV['STUDENT_ID']
-  #   form.stud_pswrd = params[:password] ||= ENV['MMLS_PASSWORD']
-  #   page = agent.submit(form)
-  #   if page.parser.xpath('//*[@id="alert"]').empty?
-  #     subject_links = page.links_with(:text => /[A-Z][A-Z][A-Z][0-9][0-9][0-9][0-9] . [A-Z][A-Z]/)
-  #     subjects = []
-  #     files = []
-  #     subject_links.each do |link|
-  #       unless (subject = Subject.find_by_name(link.text) and subject.weeks.exists?)
-  #         page = agent.get(link.uri)
-  #         original = page.parser.xpath('/html/body/div[1]/div[3]/div/div/div/div[1]')
-  #         subject_name = link.text
-  #         subject ||= Subject.new
-  #         subject.name = subject_name
-  #         week_number = 1
-  #         while !page.parser.xpath("//*[@id='accordion']/div[#{week_number}]/div[1]/h3/a").empty? do
-  #           week = subject.weeks.build
-  #           week.title = page.parser.xpath("//*[@id='accordion']/div[#{week_number}]/div[1]/h3/a").text.delete("\r").delete("\n").delete("\t").split(" - ")[0]
-  #           announcement_number = 1
-  #           announcement_generic_path = page.parser.xpath("//*[@id='accordion']/div[#{week_number}]/div[2]/div/div/div[1]")
-  #           while !announcement_generic_path.xpath("div[#{announcement_number}]/font").empty? do
-  #             announcement = week.announcements.build
-  #             announcement.title = announcement_generic_path.xpath("div[#{announcement_number}]/font").inner_text.delete("\r").delete("\t")
-  #             announcement.contents = announcement_generic_path.xpath("div[#{announcement_number}]").children[7..-1].text.delete("\r\t")
-  #             announcement.author = announcement_generic_path.xpath("div[#{announcement_number}]/div[1]/i[1]").text.delete("\r").delete("\n").delete("\t").split("  ;   ").first[3..-1]
-  #             announcement.posted_date = announcement_generic_path.xpath("div[#{announcement_number}]/div[1]/i[1]").text.delete("\r").delete("\n").delete("\t").split("               ").last
-  #             if !announcement_generic_path.xpath("div[#{announcement_number}]").at('form').nil?
-  #               print("FILES EXISTS !!!")
-  #               form_nok = announcement_generic_path.xpath("div[#{announcement_number}]").at('form')
-  #               form = Mechanize::Form.new form_nok, agent, page
-  #               file_details_hash =  Hash[form.keys.zip(form.values)]
-  #               file = announcement.subject_files.build
-  #               file.file_name = file_details_hash["file_name"]
-  #               file.token = file_details_hash["_token"]
-  #               file.content_id = file_details_hash["content_id"]
-  #               file.content_type = file_details_hash["content_type"]
-  #               file.file_path = file_details_hash["file_path"]
-  #             end
-  #             announcement_number = announcement_number + 1
-  #           end
-  #           week_number = week_number + 1
-  #         end
-  #         download_forms = page.forms_with(:action => 'https://mmls.mmu.edu.my/form-download-content')
-  #         download_forms.each do |form|
-  #           file_details_hash =  Hash[form.keys.zip(form.values)]
-  #           file = subject.subject_files.build
-  #           file.file_name = file_details_hash["file_name"]
-  #           file.token = file_details_hash["_token"]
-  #           file.content_id = file_details_hash["content_id"]
-  #           file.content_type = file_details_hash["content_type"]
-  #           file.file_path = file_details_hash["file_path"]
-  #         end
-  #         subject.save
-  #       end
-  #       subjects << subject
-  #     end
-  #     render :json => JSON.pretty_generate(subjects.as_json(
-  #         :include => [{ :weeks => {
-  #         :include => {:announcements => {:include => :subject_files} } }}, :subject_files]))
-  #   else
-  #     message = Hash.new
-  #     message[:error] = "Incorrect username or password"
-  #     message[:status] = "400"
-  #     render json: message
-  #   end
-  # end
+  def mmls
+    print "HELLO?"
+    agent = Mechanize.new
+    page = agent.get("https://mmls.mmu.edu.my")
+    form = page.form
+    form.stud_id = params[:student_id] ||= ENV['STUDENT_ID']
+    form.stud_pswrd = params[:password] ||= ENV['MMLS_PASSWORD']
+    page = agent.submit(form)
+    if page.parser.xpath('//*[@id="alert"]').empty?
+      subject_links = page.links_with(:text => /[A-Z][A-Z][A-Z][0-9][0-9][0-9][0-9] . [A-Z][A-Z]/)
+      subjects = []
+      files = []
+      subject_links.each do |link|
+        unless (subject = Subject.find_by_name(link.text) and subject.weeks.exists?)
+          page = agent.get(link.uri)
+          original = page.parser.xpath('/html/body/div[1]/div[3]/div/div/div/div[1]')
+          subject_name = link.text
+          subject ||= Subject.new
+          subject.name = subject_name
+          week_number = 1
+          while !page.parser.xpath("//*[@id='accordion']/div[#{week_number}]/div[1]/h3/a").empty? do
+            week = subject.weeks.build
+            week.title = page.parser.xpath("//*[@id='accordion']/div[#{week_number}]/div[1]/h3/a").text.delete("\r").delete("\n").delete("\t").split(" - ")[0]
+            announcement_number = 1
+            announcement_generic_path = page.parser.xpath("//*[@id='accordion']/div[#{week_number}]/div[2]/div/div/div[1]")
+            while !announcement_generic_path.xpath("div[#{announcement_number}]/font").empty? do
+              announcement = week.announcements.build
+              announcement.title = announcement_generic_path.xpath("div[#{announcement_number}]/font").inner_text.delete("\r").delete("\t")
+              announcement.contents = announcement_generic_path.xpath("div[#{announcement_number}]").children[7..-1].text.delete("\r\t")
+              announcement.author = announcement_generic_path.xpath("div[#{announcement_number}]/div[1]/i[1]").text.delete("\r").delete("\n").delete("\t").split("  ;   ").first[3..-1]
+              announcement.posted_date = announcement_generic_path.xpath("div[#{announcement_number}]/div[1]/i[1]").text.delete("\r").delete("\n").delete("\t").split("               ").last
+              if !announcement_generic_path.xpath("div[#{announcement_number}]").at('form').nil?
+                print("FILES EXISTS !!!")
+                form_nok = announcement_generic_path.xpath("div[#{announcement_number}]").at('form')
+                form = Mechanize::Form.new form_nok, agent, page
+                file_details_hash =  Hash[form.keys.zip(form.values)]
+                file = announcement.subject_files.build
+                file.file_name = file_details_hash["file_name"]
+                file.token = file_details_hash["_token"]
+                file.content_id = file_details_hash["content_id"]
+                file.content_type = file_details_hash["content_type"]
+                file.file_path = file_details_hash["file_path"]
+              end
+              announcement_number = announcement_number + 1
+            end
+            week_number = week_number + 1
+          end
+          download_forms = page.forms_with(:action => 'https://mmls.mmu.edu.my/form-download-content')
+          download_forms.each do |form|
+            file_details_hash =  Hash[form.keys.zip(form.values)]
+            file = subject.subject_files.build
+            file.file_name = file_details_hash["file_name"]
+            file.token = file_details_hash["_token"]
+            file.content_id = file_details_hash["content_id"]
+            file.content_type = file_details_hash["content_type"]
+            file.file_path = file_details_hash["file_path"]
+          end
+          subject.save
+        end
+        subjects << subject
+      end
+      render :json => JSON.pretty_generate(subjects.as_json(
+          :include => [{ :weeks => {
+          :include => {:announcements => {:include => :subject_files} } }}, :subject_files]))
+    else
+      message = Hash.new
+      message[:error] = "Incorrect username or password"
+      message[:status] = "400"
+      render json: message
+    end
+  end
 
   def refresh_token
     agent = Mechanize.new
