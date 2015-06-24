@@ -9,6 +9,14 @@
 <% end %>
 <br>
 <br>
+<h3>Timetable TEST</h3>
+<%= form_tag timetable_api_path, method: :post do %>
+  <%= label_tag :student_ID %><br>
+  <%= text_field_tag(:student_id) %><br>
+  <%= label_tag :Camsys_PASSWORD %> <br>
+  <%= password_field_tag(:camsys_password) %>
+  <%= submit_tag "Submit" %>
+<% end %>
 <!-- <h3>ATTEADENCE API TEST </h3>
 <%= form_tag attendance_api_path, method: :post do %>
   <%= label_tag :student_ID %><br>
