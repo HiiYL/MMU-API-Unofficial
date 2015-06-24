@@ -2,6 +2,8 @@ class ApiController < ApplicationController
   skip_before_action :verify_authenticity_token
   def update_bulletin
     agent = Mechanize.new
+    agent.keep_alive = true
+    agent.agent.http.retry_change_requests = true
     page = agent.get("https://online.mmu.edu.my/index.php")
     form = page.form
     bulletins = []
@@ -61,6 +63,8 @@ class ApiController < ApplicationController
   def mmls
     print "HELLO?"
     agent = Mechanize.new
+    agent.keep_alive = true
+    agent.agent.http.retry_change_requests = true
     page = agent.get("https://mmls.mmu.edu.my")
     form = page.form
     form.stud_id = params[:student_id] ||= ENV['STUDENT_ID']
@@ -132,6 +136,8 @@ class ApiController < ApplicationController
 
   def refresh_token
     agent = Mechanize.new
+    agent.keep_alive = true
+    agent.agent.http.retry_change_requests = true
     page = agent.get("https://mmls.mmu.edu.my")
     form = page.form
     token = form._token
@@ -144,6 +150,8 @@ class ApiController < ApplicationController
 
   def attendance
     agent = Mechanize.new
+    agent.keep_alive = true
+    agent.agent.http.retry_change_requests = true
     agent.agent.http.verify_mode = OpenSSL::SSL::VERIFY_NONE
     page = agent.get("https://cms.mmu.edu.my/psp/csprd/?&cmd=login&languageCd=ENG")
     form = page.form
@@ -176,6 +184,8 @@ class ApiController < ApplicationController
 
   def login_camsys_v2
     agent = Mechanize.new
+    agent.keep_alive = true
+    agent.agent.http.retry_change_requests = true
     agent.agent.http.verify_mode = OpenSSL::SSL::VERIFY_NONE
     page = agent.get("https://cms.mmu.edu.my/psp/csprd/?&cmd=login&languageCd=ENG")
     form = page.form
@@ -253,6 +263,8 @@ class ApiController < ApplicationController
 
   def login_camsys
     agent = Mechanize.new
+    agent.keep_alive = true
+    agent.agent.http.retry_change_requests = true
     agent.agent.http.verify_mode = OpenSSL::SSL::VERIFY_NONE
     page = agent.get("https://cms.mmu.edu.my/psp/csprd/?&cmd=login&languageCd=ENG")
     form = page.form
@@ -290,6 +302,8 @@ class ApiController < ApplicationController
 
   def timetable
   	agent = Mechanize.new
+    agent.keep_alive = true
+    agent.agent.http.retry_change_requests = true
     agent.agent.http.verify_mode = OpenSSL::SSL::VERIFY_NONE
     page = agent.get("https://cms.mmu.edu.my")
     form = page.form
@@ -352,6 +366,8 @@ class ApiController < ApplicationController
   end
   def login_mmls
     agent = Mechanize.new
+    agent.keep_alive = true
+    agent.agent.http.retry_change_requests = true
     page = agent.get("https://mmls.mmu.edu.my")
     print "Page acquired \n"
     form = page.form
@@ -381,6 +397,8 @@ class ApiController < ApplicationController
   end
   def get_token
     agent = Mechanize.new
+    agent.keep_alive = true
+    agent.agent.http.retry_change_requests = true
     page = agent.get("https://mmls.mmu.edu.my")
     form = page.form
     render json: {token: form._token}
@@ -408,6 +426,8 @@ class ApiController < ApplicationController
     agent = Mechanize.new
     agent.cookie_jar.add(cookie)
     agent.redirect_ok = false
+    agent.keep_alive = true
+    agent.agent.http.retry_change_requests = true
     page = agent.get(url)
     if page.code != "302"
       print "Page acquired, processing .. + \n"
