@@ -10,7 +10,7 @@ Rails.application.routes.draw do
 
   post 'login_mmls_fast' => "api#login_mmls_fast"
   # get 'timetable_api' => 'api#timetable'
-  # post 'timetable_api' => 'api#timetable'
+  post 'timetable_api' => 'api#timetable'
 
   post 'refresh_subject' => 'api#mmls_refresh_subject'
 
