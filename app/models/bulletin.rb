@@ -27,7 +27,7 @@ def update_bulletin
         bulletin.url = page.parser.xpath("//*[@id='tabs-1']/div[#{bulletin_number}]/p/a/@href").text
         bulletin.expired_on = Time.parse(bulletin_details[1].split(" : ")[1])
         bulletin.author = bulletin_details[2].split(" : ")[1].delete("\t")
-        bulletin.contents = bulletin_post.xpath("div/div/div").text.delete("\t").delete("\r")
+        bulletin.contents = bulletin_post.xpath("div/div")
         bulletin.save
       end
       bulletin_number = bulletin_number + 1

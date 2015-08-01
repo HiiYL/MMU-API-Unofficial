@@ -1,0 +1,23 @@
+<div class="container">
+  <ul class="collapsible popout" data-collapsible="accordion">
+    <% @bulletins.each do |bulletin| %>
+        <li>
+          <div class="collapsible-header"><%= bulletin.title%></div>
+          <div class="collapsible-body"><p>
+            <% if bulletin.contents.include? '<a href="' %>
+              <%= bulletin.contents.gsub!('href="', '<a href="https://online.mmu.edu.my/').html_safe %>
+            <% else %>
+              <%= bulletin.contents.html_safe %>
+            <% end %>
+          </p></div>
+        </li>
+    <% end %>
+  </ul>
+</div>
+<script type="text/javascript">
+  $(document).on('ready page:load', function () {
+    $('.collapsible').collapsible({
+      accordion : false // A setting that changes the collapsible behavior to expandable instead of the default accordion style
+    });
+  });
+</script>

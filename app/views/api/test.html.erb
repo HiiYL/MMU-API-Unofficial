@@ -1,0 +1,76 @@
+<h1>API TEST</h1>
+<h3>CAMSYS LOGIN TEST V2 </h3>
+<%= form_tag login_camsys_v2_path, method: :post do %>
+  <%= label_tag :student_ID %><br>
+  <%= text_field_tag(:student_id) %><br>
+  <%= label_tag :Camsys_PASSWORD %> <br>
+  <%= password_field_tag(:camsys_password) %>
+  <%= submit_tag "Submit" %>
+<% end %>
+<br>
+<br>
+<h3>Timetable TEST</h3>
+<%= form_tag timetable_api_path, method: :post do %>
+  <%= label_tag :student_ID %><br>
+  <%= text_field_tag(:student_id) %><br>
+  <%= label_tag :Camsys_PASSWORD %> <br>
+  <%= password_field_tag(:camsys_password) %>
+  <%= submit_tag "Submit" %>
+<% end %>
+<!-- <h3>ATTEADENCE API TEST </h3>
+<%= form_tag attendance_api_path, method: :post do %>
+  <%= label_tag :student_ID %><br>
+  <%= text_field_tag(:student_id) %><br>
+  <%= label_tag :Camsys_PASSWORD %> <br>
+  <%= password_field_tag(:password) %>
+  <%= submit_tag "Submit" %>
+<% end %>
+<br>
+<br> -->
+<h3>MMLS API TEST</h3>
+<%= form_tag mmls_api_path, method: :post do %>
+  <%= label_tag :student_ID %><br>
+  <%= text_field_tag(:student_id) %><br>
+  <%= label_tag :MMLS_PASSWORD %> <br>
+  <%= password_field_tag(:password) %>
+  <%= submit_tag "Submit" %>
+<% end %>
+<br>
+
+<br>
+<h3>BULLETIN API TEST</h3>
+<%= form_tag bulletin_api_path, method: :post do %>
+  <%= label_tag :student_ID %><br>
+  <%= text_field_tag(:student_id) %><br>
+  <%= label_tag :PORTAL_PASSWORD %> <br>
+  <%= password_field_tag(:password) %>
+  <%= submit_tag "Submit" %>
+<% end %>
+<h3>MMLS LOGIN TEST</h3>
+<%= form_tag login_mmls_path, method: :post do %>
+  <%= label_tag :student_ID %><br>
+  <%= text_field_tag(:student_id) %><br>
+  <%= label_tag :MMLS_Password %> <br>
+  <%= password_field_tag(:mmls_password) %> <br>
+  <%= submit_tag "Submit" %>
+<% end %>
+<h3>MMLS COOKIE REFRESH TEST</h3>
+<%= form_tag refresh_token_path, method: :post do %>
+  <%= label_tag :student_ID %><br>
+  <%= text_field_tag(:student_id) %><br>
+  <%= label_tag :MMLS_Password %> <br>
+  <%= password_field_tag(:mmls_password) %> <br>
+  <%= submit_tag "Submit" %>
+<% end %>
+<h3>MMLS SINGLE SUBJECT REFRESH TEST</h3>
+<%= form_tag refresh_subject_path, method: :post do %>
+  <%= label_tag :subject_url %><br>
+  <%= text_field_tag(:subject_url) %><br>
+  <%= label_tag :cookie %> <br>
+  <%= password_field_tag(:cookie) %> <br>
+  <%= label_tag "Last Sync(OPTIONAL)" %> <br>
+  <%= text_field_tag :last_sync %><br>
+  <%= submit_tag "Submit" %>
+<% end %>
+
+

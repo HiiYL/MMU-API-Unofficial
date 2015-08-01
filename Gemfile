@@ -5,6 +5,8 @@ source 'https://rubygems.org'
 
 ruby "2.2.2"
 gem 'rails', '4.2.1'
+
+gem 'materialize-sass'
 gem 'puma'
 gem 'sanitize'
 # Use sqlite3 as the database for Active Record

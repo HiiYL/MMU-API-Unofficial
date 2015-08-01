@@ -1,16 +1,14 @@
 class ApiController < ApplicationController
   skip_before_action :verify_authenticity_token
+  before_filter :set_agent
   def update_bulletin
-    agent = Mechanize.new
-    agent.keep_alive = true
-    agent.agent.http.retry_change_requests = true
-    page = agent.get("https://online.mmu.edu.my/index.php")
+    page = @agent.get("https://online.mmu.edu.my/index.php")
     form = page.form
     bulletins = []
     form.form_loginUsername =  ENV['STUDENT_ID']
     form.form_loginPassword = ENV['PORTAL_PASSWORD']
-    page = agent.submit(form)
-    page = agent.get("https://online.mmu.edu.my/bulletin.php")
+    page = @agent.submit(form)
+    page = @agent.get("https://online.mmu.edu.my/bulletin.php")
     bulletin_number = 1
     while !page.parser.xpath("//*[@id='tabs-1']/div[#{bulletin_number}]").empty? and bulletin_number <= 20
       url = page.parser.xpath("//*[@id='tabs-1']/div[#{bulletin_number}]/p/a/@href").text
@@ -32,51 +30,21 @@ class ApiController < ApplicationController
     render json: JSON.pretty_generate( Bulletin.order(posted_on: :desc,url: :desc).limit(20).as_json)
   end
 
-  # def portal
-  #   bulletins = []
-  #   agent = Mechanize.new
-  #   page = agent.get("https://online.mmu.edu.my/index.php")
-  #   form = page.form
-  #   # form.form_loginUsername = params[:student_id]
-  #   #form.form_loginUsername =  ENV['STUDENT_ID']
-  #   form.form_loginPassword = params[:password]
-  #   #form.form_loginPassword = ENV['PORTAL_PASSWORD']
-  #   page = agent.submit(form)
-  #   tab_number = 1
-  #   bulletin_number = 1
-  #   while !page.parser.xpath("//*[@id='tabs']/div[#{tab_number}]/div[#{bulletin_number}]").empty?
-  #     bulletin = Hash.new
-  #     bulletin[:title] = page.parser.xpath("//*[@id='tabs']/div[#{tab_number}]/div[#{bulletin_number}]/p/a[1]").text
-  #     bulletin_details = page.parser.xpath("//*[@id='tabs']/div[#{tab_number}]/div[#{bulletin_number}]/div/div/text()").text.split("\r\n        ").delete_if(&:empty?)
-  #     #remember to add android autolink
-  #     bulletin[:posted_date] = bulletin_details[0].split(" ")[2..5].join(" ")
-  #     bulletin[:expired_date] = bulletin_details[1].split(" : ")[1]
-  #     bulletin[:author] = bulletin_details[2].split(" : ")[1].delete("\t")
-  #     page.parser.xpath("//*[@id='tabs']/div[1]/div[2]/div/div/div")
-  #     bulletin[:contents] = page.parser.xpath("//*[@id='tabs']/div[#{tab_number}]/div[#{bulletin_number}]/div/div/div").text.delete("\t").delete("\r")
-  #     bulletins << bulletin
-  #     bulletin_number = bulletin_number + 1
-  #   end
-  #   render :json => JSON.pretty_generate(bulletins.as_json)
-  # end
-
   def mmls
-    print "HELLO?"
-    agent = Mechanize.new
-    agent.keep_alive = true
-    agent.agent.http.retry_change_requests = true
-    page = agent.get("https://mmls.mmu.edu.my")
+    page = @agent.get("https://mmls.mmu.edu.my")
     form = page.form
-    form.stud_id = params[:student_id] ||= ENV['STUDENT_ID']
-    form.stud_pswrd = params[:password] ||= ENV['MMLS_PASSWORD']
-    page = agent.submit(form)
+    form.stud_id = params[:student_id]
+    form.stud_pswrd = params[:password]
+
+    print "HELLO + " + params[:student_id] + "   " + params[:password] 
+    page = @agent.submit(form)
     if page.parser.xpath('//*[@id="alert"]').empty?
       subject_links = page.links_with(:text => /[A-Z][A-Z][A-Z][0-9][0-9][0-9][0-9] . [A-Z][A-Z]/)
-      subjects = []
+      @subjects = []
       files = []
       subject_links.each do |link|
-        unless (subject = Subject.find_by_name(link.text) and subject.weeks.exists?)
-          page = agent.get(link.uri)
+        if true
+          page = @agent.get(link.uri)
           original = page.parser.xpath('/html/body/div[1]/div[3]/div/div/div/div[1]')
           subject_name = link.text
           subject ||= Subject.new
@@ -90,13 +58,14 @@ class ApiController < ApplicationController
             while !announcement_generic_path.xpath("div[#{announcement_number}]/font").empty? do
               announcement = week.announcements.build
               announcement.title = announcement_generic_path.xpath("div[#{announcement_number}]/font").inner_text.delete("\r").delete("\t")
-              announcement.contents = announcement_generic_path.xpath("div[#{announcement_number}]").children[7..-1].text.delete("\r\t")
+              announcement.contents = announcement_generic_path.xpath("div[#{announcement_number}]")
+              announcement.contents.gsub!('src="', 'src="https://mmls.mmu.edu.my/')
               announcement.author = announcement_generic_path.xpath("div[#{announcement_number}]/div[1]/i[1]").text.delete("\r").delete("\n").delete("\t").split("  ;   ").first[3..-1]
               announcement.posted_date = announcement_generic_path.xpath("div[#{announcement_number}]/div[1]/i[1]").text.delete("\r").delete("\n").delete("\t").split("               ").last
               if !announcement_generic_path.xpath("div[#{announcement_number}]").at('form').nil?
                 print("FILES EXISTS !!!")
                 form_nok = announcement_generic_path.xpath("div[#{announcement_number}]").at('form')
-                form = Mechanize::Form.new form_nok, agent, page
+                form = Mechanize::Form.new form_nok, @agent, page
                 file_details_hash =  Hash[form.keys.zip(form.values)]
                 file = announcement.subject_files.build
                 file.file_name = file_details_hash["file_name"]
@@ -121,11 +90,17 @@ class ApiController < ApplicationController
           end
           subject.save
         end
-        subjects << subject
+        @subjects << subject
       end
-      render :json => JSON.pretty_generate(subjects.as_json(
-          :include => [{ :weeks => {
-          :include => {:announcements => {:include => :subject_files} } }}, :subject_files]))
+      cookies = @agent.cookie_jar
+      respond_to do |format|
+        format.json do
+          render :json => JSON.pretty_generate(@subjects.as_json(
+              :include => [{ :weeks => {
+              :include => {:announcements => {:include => :subject_files} } }}, :subject_files]))
+        end
+        format.js 
+      end
     else
       message = Hash.new
       message[:error] = "Incorrect username or password"
@@ -135,66 +110,26 @@ class ApiController < ApplicationController
   end
 
   def refresh_token
-    agent = Mechanize.new
-    agent.keep_alive = true
-    agent.agent.http.retry_change_requests = true
-    page = agent.get("https://mmls.mmu.edu.my")
+    page = @agent.get("https://mmls.mmu.edu.my")
     form = page.form
     token = form._token
     form.stud_id = params[:student_id]
     form.stud_pswrd = params[:password]
-    page = agent.submit(form)
-    laravel_cookie = agent.cookie_jar.first.value
+    page = @agent.submit(form)
+    laravel_cookie = @agent.cookie_jar.first.value
     render json: {token: form._token, cookie: laravel_cookie}
   end
 
-  def attendance
-    agent = Mechanize.new
-    agent.keep_alive = true
-    agent.agent.http.retry_change_requests = true
-    agent.agent.http.verify_mode = OpenSSL::SSL::VERIFY_NONE
-    page = agent.get("https://cms.mmu.edu.my/psp/csprd/?&cmd=login&languageCd=ENG")
-    form = page.form
-    form.userid = params[:student_id]
-    form.pwd = params[:password]
-    page = agent.submit(form)
-    page = agent.get("https://cms.mmu.edu.my/psc/csprd/EMPLOYEE/HRMS/c/N_SR_STUDENT_RECORDS.N_SR_SS_ATTEND_PCT.GBL?
-      PORTALPARAM_PTCNAV=HC_SSS_attendance_PERCENT_GBL&EOPP.SCNode=HRMS&EOPP.SCPortal=EMPLOYEE&EOPP.SCName=
-      CO_EMPLOYEE_SELF_SERVICE&EOPP.SCLabel=Self%20Service&EOPP.SCPTfname=CO_EMPLOYEE_SELF_SERVICE&FolderPath=
-      PORTAL_ROOT_OBJECT.CO_EMPLOYEE_SELF_SERVICE.HCCC_ACADEMIC_RECORDS.HC_SSS_attendance_PERCENT_GBL&IsFolder=
-      false&PortalActualURL=https%3a%2f%2fcms.mmu.edu.my%2fpsc%2fcsprd%2fEMPLOYEE%2fHRMS%2fc%2fN_SR_STUDENT_RECORDS.
-      _SR_SS_ATTEND_PCT.GBL&PortalContentURL=https%3a%2f%2fcms.mmu.edu.my%2fpsc%2fcsprd%2fEMPLOYEE%2fHRMS%2fc%
-      2fN_SR_STUDENT_RECORDS.N_SR_SS_ATTEND_PCT.GBL&PortalContentProvider=HRMS&PortalCRefLabel=attendance%
-      20Percentage%20by%20class&PortalRegistryName=EMPLOYEE&PortalServletURI=https%3a%2f%2fcms.mmu.edu.my
-      %2fpsp%2fcsprd%2f&PortalURI=https%3a%2f%2fcms.mmu.edu.my%2fpsc%2fcsprd%2f&PortalHostNode=HRMS&NoCrumbs=yes
-      &PortalKeyStruct=yes")
-    subjects_attendance = []
-    attendance_table = page.parser.xpath('//*[@id="N_STN_ENRL_SSVW$scroll$0"]')
-    attendance_table_fields = attendance_table.xpath("tr[2]").text.split("\n").reject!(&:empty?)
-    current_row = 3
-    while(!attendance_table.xpath("tr[#{current_row}]").empty? ) do
-      subject_row = attendance_table.xpath("tr[#{current_row}]").text.split("\n").reject!(&:empty?)
-      subject_is_not_barred = attendance_table.xpath("tr[#{current_row}]/td[6]/div/input").attr('value').value == "Y"? "false" : "true"
-      subject_row.insert(5, subject_is_not_barred)
-      subjects_attendance << Hash[attendance_table_fields.zip(subject_row)]
-      current_row = current_row + 1
-    end
-    render json: JSON.pretty_generate(subjects_attendance.as_json)
-  end
-
   def login_camsys_v2
-    agent = Mechanize.new
-    agent.keep_alive = true
-    agent.agent.http.retry_change_requests = true
-    agent.agent.http.verify_mode = OpenSSL::SSL::VERIFY_NONE
-    page = agent.get("https://cms.mmu.edu.my/psp/csprd/?&cmd=login&languageCd=ENG")
+    @agent.agent.http.verify_mode = OpenSSL::SSL::VERIFY_NONE
+    page = @agent.get("https://cms.mmu.edu.my/psp/csprd/?&cmd=login&languageCd=ENG")
     form = page.form
     form.userid = params[:student_id]
     form.pwd = params[:camsys_password]
-    page = agent.submit(form)
+    page = @agent.submit(form)
     if page.parser.xpath('//*[@id="login_error"]').empty?
       response = {}
-      page = agent.get("https://cms.mmu.edu.my/psc/csprd/EMPLOYEE/HRMS/c/N_SR_STUDENT_RECORDS.N_SR_SS_ATTEND_PCT.GBL?
+      page = @agent.get("https://cms.mmu.edu.my/psc/csprd/EMPLOYEE/HRMS/c/N_SR_STUDENT_RECORDS.N_SR_SS_ATTEND_PCT.GBL?
         PORTALPARAM_PTCNAV=HC_SSS_attendance_PERCENT_GBL&EOPP.SCNode=HRMS&EOPP.SCPortal=EMPLOYEE&EOPP.SCName=
         CO_EMPLOYEE_SELF_SERVICE&EOPP.SCLabel=Self%20Service&EOPP.SCPTfname=CO_EMPLOYEE_SELF_SERVICE&FolderPath=
         PORTAL_ROOT_OBJECT.CO_EMPLOYEE_SELF_SERVICE.HCCC_ACADEMIC_RECORDS.HC_SSS_attendance_PERCENT_GBL&IsFolder=
@@ -216,7 +151,7 @@ class ApiController < ApplicationController
         current_row = current_row + 1
       end
       response[:subjects_attendance] = subjects_attendance
-      page = agent.get("https://cms.mmu.edu.my/psc/csprd/EMPLOYEE/HRMS/c/SA_LEARNER_SERVICES.N_SSF_ACNT_SUMMARY.GBL?
+      page = @agent.get("https://cms.mmu.edu.my/psc/csprd/EMPLOYEE/HRMS/c/SA_LEARNER_SERVICES.N_SSF_ACNT_SUMMARY.GBL?
         PORTALPARAM_PTCNAV=N_SSF_ACNT_SUMMARY_GBL&EOPP.SCNode=HRMS&EOPP.SCPortal=EMPLOYEE&EOPP.SCName=
         CO_EMPLOYEE_SELF_SERVICE&EOPP.SCLabel=Campus%20Finances&EOPP.SCFName=HCCC_FINANCES&EOPP.SCSecondary=true
         &EOPP.SCPTfname=HCCC_FINANCES&FolderPath=PORTAL_ROOT_OBJECT.CO_EMPLOYEE_SELF_SERVICE.
@@ -232,7 +167,7 @@ class ApiController < ApplicationController
         amount_due = page.parser.xpath('//*[@id="N_CUST_SS_DRVD_ACCOUNT_BALANCE"]').text
         response[:amount_due] = amount_due
       end
-      page = agent.get("https://cms.mmu.edu.my/psc/csprd/EMPLOYEE/HRMS/c/N_MANAGE_EXAMS.N_SS_EXAM_TIMETBL.GBL?
+      page = @agent.get("https://cms.mmu.edu.my/psc/csprd/EMPLOYEE/HRMS/c/N_MANAGE_EXAMS.N_SS_EXAM_TIMETBL.GBL?
         PORTALPARAM_PTCNAV=N_SS_EXAM_TIMETBL_GBL&EOPP.SCNode=HRMS&EOPP.SCPortal=EMPLOYEE&EOPP.SCName
         =CO_EMPLOYEE_SELF_SERVICE&EOPP.SCLabel=Self%20Service&EOPP.SCPTfname=CO_EMPLOYEE_SELF_SERVICE&
         FolderPath=PORTAL_ROOT_OBJECT.CO_EMPLOYEE_SELF_SERVICE.N_SS_EXAM_TIMETBL_GBL&IsFolder=false&
@@ -253,7 +188,7 @@ class ApiController < ApplicationController
       end
       response[:exam_timetable] = exam_timetable
 
-      agent.get("https://cms.mmu.edu.my/psp/csprd/EMPLOYEE/HRMS/?cmd=logout")
+      @agent.get("https://cms.mmu.edu.my/psp/csprd/EMPLOYEE/HRMS/?cmd=logout")
 
       render json: JSON.pretty_generate(response.as_json)
     else
@@ -262,17 +197,14 @@ class ApiController < ApplicationController
   end
 
   def login_camsys
-    agent = Mechanize.new
-    agent.keep_alive = true
-    agent.agent.http.retry_change_requests = true
-    agent.agent.http.verify_mode = OpenSSL::SSL::VERIFY_NONE
-    page = agent.get("https://cms.mmu.edu.my/psp/csprd/?&cmd=login&languageCd=ENG")
+    @agent.agent.http.verify_mode = OpenSSL::SSL::VERIFY_NONE
+    page = @agent.get("https://cms.mmu.edu.my/psp/csprd/?&cmd=login&languageCd=ENG")
     form = page.form
     form.userid = params[:student_id]
     form.pwd = params[:camsys_password]
-    page = agent.submit(form)
+    page = @agent.submit(form)
     if page.parser.xpath('//*[@id="login_error"]').empty?
-      page = agent.get("https://cms.mmu.edu.my/psc/csprd/EMPLOYEE/HRMS/c/N_SR_STUDENT_RECORDS.N_SR_SS_ATTEND_PCT.GBL?
+      page = @agent.get("https://cms.mmu.edu.my/psc/csprd/EMPLOYEE/HRMS/c/N_SR_STUDENT_RECORDS.N_SR_SS_ATTEND_PCT.GBL?
         PORTALPARAM_PTCNAV=HC_SSS_attendance_PERCENT_GBL&EOPP.SCNode=HRMS&EOPP.SCPortal=EMPLOYEE&EOPP.SCName=
         CO_EMPLOYEE_SELF_SERVICE&EOPP.SCLabel=Self%20Service&EOPP.SCPTfname=CO_EMPLOYEE_SELF_SERVICE&FolderPath=
         PORTAL_ROOT_OBJECT.CO_EMPLOYEE_SELF_SERVICE.HCCC_ACADEMIC_RECORDS.HC_SSS_attendance_PERCENT_GBL&IsFolder=
@@ -293,7 +225,7 @@ class ApiController < ApplicationController
         subjects_attendance << Hash[attendance_table_fields.zip(subject_row)]
         current_row = current_row + 1
       end
-      agent.get("https://cms.mmu.edu.my/psp/csprd/EMPLOYEE/HRMS/?cmd=logout")
+      @agent.get("https://cms.mmu.edu.my/psp/csprd/EMPLOYEE/HRMS/?cmd=logout")
       render json: JSON.pretty_generate(subjects_attendance.as_json)
     else
       render json: {error: "Incorrect CAMSYS username or password", status: 400}, status: 400
@@ -301,18 +233,15 @@ class ApiController < ApplicationController
   end
 
   def timetable
-  	agent = Mechanize.new
-    agent.keep_alive = true
-    agent.agent.http.retry_change_requests = true
-    agent.agent.http.verify_mode = OpenSSL::SSL::VERIFY_NONE
-    page = agent.get("https://cms.mmu.edu.my")
+    @agent.agent.http.verify_mode = OpenSSL::SSL::VERIFY_NONE
+    page = @agent.get("https://cms.mmu.edu.my")
     form = page.form
     form.userid = params[:student_id] ||= ENV['STUDENT_ID']
     form.pwd = params[:password] ||= ENV['CAMSYS_PASSWORD']
-    page = agent.submit(form)
+    page = @agent.submit(form)
     subjects = []
     if page.parser.xpath('//*[@id="login_error"]').empty?
-      page = agent.get("https://cms.mmu.edu.my/psc/csprd/EMPLOYEE/HRMS/c/SA_LEARNER_SERVICES.SSR_SSENRL_LIST.GBL?PORTALPARAM_PTCNAV=HC_SSR_SSENRL_LIST&amp;EOPP.SCNode=HRMS&amp;EOPP.SCPortal=EMPLOYEE&amp;EOPP.SCName=CO_EMPLOYEE_SELF_SERVICE&amp;EOPP.SCLabel=Self%20Service&amp;EOPP.SCPTfname=CO_EMPLOYEE_SELF_SERVICE&amp;FolderPath=PORTAL_ROOT_OBJECT.CO_EMPLOYEE_SELF_SERVICE.HCCC_ENROLLMENT.HC_SSR_SSENRL_LIST&amp;IsFolder=false&amp;PortalActualURL=https%3a%2f%2fcms.mmu.edu.my%2fpsc%2fcsprd%2fEMPLOYEE%2fHRMS%2fc%2fSA_LEARNER_SERVICES.SSR_SSENRL_LIST.GBL&amp;PortalContentURL=https%3a%2f%2fcms.mmu.edu.my%2fpsc%2fcsprd%2fEMPLOYEE%2fHRMS%2fc%2fSA_LEARNER_SERVICES.SSR_SSENRL_LIST.GBL&amp;PortalContentProvider=HRMS&amp;PortalCRefLabel=My%20Class%20Schedule&amp;PortalRegistryName=EMPLOYEE&amp;PortalServletURI=https%3a%2f%2fcms.mmu.edu.my%2fpsp%2fcsprd%2f&amp;PortalURI=https%3a%2f%2fcms.mmu.edu.my%2fpsc%2fcsprd%2f&amp;PortalHostNode=HRMS&amp;NoCrumbs=yes&amp;PortalKeyStruct=yes")
+      page = @agent.get("https://cms.mmu.edu.my/psc/csprd/EMPLOYEE/HRMS/c/SA_LEARNER_SERVICES.SSR_SSENRL_LIST.GBL?PORTALPARAM_PTCNAV=HC_SSR_SSENRL_LIST&amp;EOPP.SCNode=HRMS&amp;EOPP.SCPortal=EMPLOYEE&amp;EOPP.SCName=CO_EMPLOYEE_SELF_SERVICE&amp;EOPP.SCLabel=Self%20Service&amp;EOPP.SCPTfname=CO_EMPLOYEE_SELF_SERVICE&amp;FolderPath=PORTAL_ROOT_OBJECT.CO_EMPLOYEE_SELF_SERVICE.HCCC_ENROLLMENT.HC_SSR_SSENRL_LIST&amp;IsFolder=false&amp;PortalActualURL=https%3a%2f%2fcms.mmu.edu.my%2fpsc%2fcsprd%2fEMPLOYEE%2fHRMS%2fc%2fSA_LEARNER_SERVICES.SSR_SSENRL_LIST.GBL&amp;PortalContentURL=https%3a%2f%2fcms.mmu.edu.my%2fpsc%2fcsprd%2fEMPLOYEE%2fHRMS%2fc%2fSA_LEARNER_SERVICES.SSR_SSENRL_LIST.GBL&amp;PortalContentProvider=HRMS&amp;PortalCRefLabel=My%20Class%20Schedule&amp;PortalRegistryName=EMPLOYEE&amp;PortalServletURI=https%3a%2f%2fcms.mmu.edu.my%2fpsp%2fcsprd%2f&amp;PortalURI=https%3a%2f%2fcms.mmu.edu.my%2fpsc%2fcsprd%2f&amp;PortalHostNode=HRMS&amp;NoCrumbs=yes&amp;PortalKeyStruct=yes")
       table = page.parser.xpath('//*[@id="ACE_STDNT_ENRL_SSV2$0"]')
       a = 2
       while !table.xpath("tr[#{a}]").empty? do
@@ -350,13 +279,7 @@ class ApiController < ApplicationController
                                                        :include => {:timeslots => { :except => [:id, :subject_class_id] } },
                                                         :except => [:id] } },
                                                         :except => [:id, :subject_class_id])
-
-
       render :json => JSON.pretty_generate(subjects_json)
-        # :include => { :subjects => {
-        #  :include => { :subject_classes => {
-        #   :include => :timeslots, :except => [:id]} }, :except => [:id,:subject_class_id] }},
-        #    :except => [:id]))
     else
       message = Hash.new
       message[:error] = "Incorrect username or password"
@@ -365,16 +288,13 @@ class ApiController < ApplicationController
     end
   end
   def login_mmls
-    agent = Mechanize.new
-    agent.keep_alive = true
-    agent.agent.http.retry_change_requests = true
-    page = agent.get("https://mmls.mmu.edu.my")
+    page = @agent.get("https://mmls.mmu.edu.my")
     print "Page acquired \n"
     form = page.form
     form.stud_id = params[:student_id]
     form.stud_pswrd = params[:mmls_password]
     token = form._token
-    page = agent.submit(form)
+    page = @agent.submit(form)
     details_array = page.parser.xpath('/html/body/div[1]/div[3]/div/div/div/div[2]/div[2]/div[2]').text.delete("\r\t()").split("\n")
     details = Hash.new
     details[:name] = details_array[1]
@@ -388,7 +308,7 @@ class ApiController < ApplicationController
       subjects << subject
     end
 
-    laravel_cookie = agent.cookie_jar.first.value
+    laravel_cookie = @agent.cookie_jar.first.value
     unless page.parser.xpath('//*[@id="alert"]').empty?
      render json: {message: "Incorrect MMLS username or password", status: 400}, status:400
     else
@@ -396,21 +316,23 @@ class ApiController < ApplicationController
     end
   end
   def get_token
-    agent = Mechanize.new
-    agent.keep_alive = true
-    agent.agent.http.retry_change_requests = true
-    page = agent.get("https://mmls.mmu.edu.my")
+    page = @agent.get("https://mmls.mmu.edu.my")
     form = page.form
     render json: {token: form._token}
   end
 
   def bulletin
+    @bulletins = Bulletin.order(posted_on: :desc, url: :desc).limit(20)
+  end
+
+  def bulletin_api
     headers['Access-Control-Allow-Origin'] = "*"
+    @bulletins = Bulletin.order(posted_on: :desc, url: :desc).limit(20)
     if !params[:last_sync].blank?
       last_sync = Time.parse(params[:last_sync])
-      render json: Bulletin.where( "posted_on >= ?", last_sync.to_date).order(posted_on: :desc, url: :desc).limit(20).as_json( methods: :posted_date,except: [:posted_on,:created_at, :updated_at, :expired_on, :id])
+      render json: @bulletins.where( "posted_on >= ?", last_sync.to_date).as_json( methods: :posted_date,except: [:posted_on,:created_at, :updated_at, :expired_on, :id])
     else
-      render json: Bulletin.order(posted_on: :desc,url: :desc).limit(20).as_json( methods: :posted_date, except: [:posted_on,:created_at, :updated_at, :expired_on, :id])
+      render json: @bulletins.as_json( methods: :posted_date, except: [:posted_on,:created_at, :updated_at, :expired_on, :id])
     end
   end
 
@@ -423,12 +345,9 @@ class ApiController < ApplicationController
     end
     domain = "mmls.mmu.edu.my"
     cookie = Mechanize::Cookie.new :domain => domain, :name => name, :value => value, :path => '/', :expires => (Date.today + 1).to_s
-    agent = Mechanize.new
-    agent.cookie_jar.add(cookie)
-    agent.redirect_ok = false
-    agent.keep_alive = true
-    agent.agent.http.retry_change_requests = true
-    page = agent.get(url)
+    @agent.cookie_jar.add(cookie)
+
+    page = @agent.get(url)
     if page.code != "302"
       print "Page acquired, processing .. + \n"
       original = page.parser.xpath('/html/body/div[1]/div[3]/div/div/div/div[1]')
@@ -464,7 +383,7 @@ class ApiController < ApplicationController
             if !announcement_generic_path.xpath("div[#{announcement_number}]").at('form').nil?
               print("FILES EXISTS !!!")
               form_nok = announcement_generic_path.xpath("div[#{announcement_number}]").at('form')
-              form = Mechanize::Form.new form_nok, agent, page
+              form = Mechanize::Form.new form_nok, @agent, page
               file_details_hash =  Hash[form.keys.zip(form.values)]
               file = announcement.subject_files.build
               file.file_name = file_details_hash["file_name"]
@@ -497,7 +416,13 @@ class ApiController < ApplicationController
   end
 
   private
-   def timetable_params
+    def set_agent
+      @agent = Mechanize.new
+      # @agent.redirect_ok = false
+      @agent.keep_alive = true
+      @agent.agent.http.retry_change_requests = true
+    end 
+    def timetable_params
       timetable_params.allow("student_id", "password")
-   end
+    end
 end
