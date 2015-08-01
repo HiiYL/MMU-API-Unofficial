@@ -57,7 +57,7 @@ $(document).ready(function(){
       $(".loading-spinner").show();
     }).on('ajax:success',function(e, data, status, xhr){
       $(".loading-spinner").hide();
-      alert(data);
+      // alert(data);
       $(function() {
         $("#mmls_column").append("<h3>Current Week Announcements</h3>");
         var outer = $("#mmls_column").append('<ul class="collapsible" data-collapsible="accordion"></ul>').addClass("collapsible popout").find('ul');
