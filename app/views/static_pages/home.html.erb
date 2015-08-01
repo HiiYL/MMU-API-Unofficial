@@ -18,8 +18,16 @@
 
   <div class="col s12 m6" id="mmls_column">
     <div class="row">
+      <div class="error-message-box card-panel col s8 hidden">
+        <i class="material-icons left">
+        warning
+        </i>
+        <p class="error-message">Error Message Here</p>
+      </div>
+
     <%= form_tag mmls_api_path, id: "mmls_login_form",class: "col s8 card-panel", remote: true %>
-      <h3>MMLS Login</h3>
+ 
+      <h4 class="form-title">MMLS Login</h4>
       <div class="row">
         <div class="input-field col s12">
           <%= text_field_tag :student_id, nil, class: "validate" %>
@@ -31,11 +39,13 @@
           <%= password_field_tag :password, nil, class: "validate" %>
           <label for="password">Password</label>
         </div>
-        <%= submit_tag "Submit", class: "waves-effect waves-light btn-large"%>
+         <button class="btn waves-effect waves-light submit-button" type="submit" name="action">Submit
+          <i class="material-icons">send</i>
+        </button>
       </div>
     </form>
   </div>
-    <div class="preloader-wrapper big active hidden loading-spinner hidden">
+    <div class="preloader-wrapper big active hidden loading-spinner">
       <div class="spinner-layer spinner-blue-only">
         <div class="circle-clipper left">
           <div class="circle"></div>
@@ -57,9 +67,10 @@ $(document).ready(function(){
       $(".loading-spinner").show();
     }).on('ajax:success',function(e, data, status, xhr){
       $(".loading-spinner").hide();
+      $(".error-message-box").hide();
       // alert(data);
       $(function() {
-        $("#mmls_column").append("<h3>Current Week Announcements</h3>");
+        $("#mmls_column").append("<h4>This Week</h4>");
         var outer = $("#mmls_column").append('<ul class="collapsible" data-collapsible="accordion"></ul>').addClass("collapsible popout").find('ul');
         $.each(data, function(i, item) {
           outer_li = $("<li></li>").appendTo(outer);
@@ -84,7 +95,12 @@ $(document).ready(function(){
         });
       })
     }).on('ajax:error',function(e, xhr, status, error){
-      alert("ERROR!");
+      var jsonValue = jQuery.parseJSON( xhr.responseText);
+      $(".error-message-box").show();
+      $(".error-message").text(jsonValue.error);
+      $(".loading-spinner").hide();
+      $("#mmls_login_form").show();
+
     });
   });
 </script>

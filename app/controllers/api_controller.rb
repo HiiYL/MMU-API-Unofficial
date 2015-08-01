@@ -12,7 +12,7 @@ class ApiController < ApplicationController
     form.stud_id = params[:student_id]
     form.stud_pswrd = params[:password]
 
-    print "HELLO + " + params[:student_id] + "   " + params[:password] 
+
     page = @agent.submit(form)
     if page.parser.xpath('//*[@id="alert"]').empty?
       subject_links = page.links_with(:text => /[A-Z][A-Z][A-Z][0-9][0-9][0-9][0-9] . [A-Z][A-Z]/)
@@ -39,7 +39,6 @@ class ApiController < ApplicationController
               announcement.author = announcement_generic_path.xpath("div[#{announcement_number}]/div[1]/i[1]").text.delete("\r").delete("\n").delete("\t").split("  ;   ").first[3..-1]
               announcement.posted_date = announcement_generic_path.xpath("div[#{announcement_number}]/div[1]/i[1]").text.delete("\r").delete("\n").delete("\t").split("               ").last
               if !announcement_generic_path.xpath("div[#{announcement_number}]").at('form').nil?
-                print("FILES EXISTS !!!")
                 form_nok = announcement_generic_path.xpath("div[#{announcement_number}]").at('form')
                 form = Mechanize::Form.new form_nok, @agent, page
                 file_details_hash =  Hash[form.keys.zip(form.values)]
@@ -64,7 +63,7 @@ class ApiController < ApplicationController
             file.content_type = file_details_hash["content_type"]
             file.file_path = file_details_hash["file_path"]
           end
-          subject.save
+          # subject.save
         end
         @subjects << subject
       end
@@ -78,10 +77,7 @@ class ApiController < ApplicationController
         format.js 
       end
     else
-      message = Hash.new
-      message[:error] = "Incorrect username or password"
-      message[:status] = "400"
-      render json: message
+      render json: {error: "Incorrect MMLS username or password"}, status: 400
     end
   end
 

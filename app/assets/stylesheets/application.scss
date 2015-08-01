@@ -6,3 +6,24 @@
 .hidden {
 	display: none;
 }
+.submit-button {
+  height: 45px;
+  line-height: 10px;
+  width: 100%;
+}
+.form-title {
+	background-color: #81D4FA;
+	text-align: center;
+	color:white;
+	height: 80px;
+	line-height: 80px;
+	margin: 0px -11px 0px -11px;
+}
+.error-message-box {
+	background-color: red;
+	color:white;
+	.material-icons {
+		font-size: 40px;
+		margin-top: 5px;
+	}
+}
