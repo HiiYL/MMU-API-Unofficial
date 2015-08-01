@@ -92,7 +92,7 @@ class ApiController < ApplicationController
         end
         @subjects << subject
       end
-      cookies = @agent.cookie_jar
+      # @agent.cookie_jar.first.value
       respond_to do |format|
         format.json do
           render :json => JSON.pretty_generate(@subjects.as_json(
