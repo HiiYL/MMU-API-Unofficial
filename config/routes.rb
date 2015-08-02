@@ -8,6 +8,7 @@ Rails.application.routes.draw do
   get 'bulletin_api' => 'api#bulletin_api'
   get 'bulletin' => 'api#bulletin'
   post 'attendance_api' => 'api#attendance'
+  get 'test' => 'api#test'
 
   post 'login_mmls_fast' => "api#login_mmls_fast"
   # get 'timetable_api' => 'api#timetable'

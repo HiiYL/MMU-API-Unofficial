@@ -6,6 +6,9 @@ class ApiController < ApplicationController
     render json: JSON.pretty_generate( Bulletin.order(posted_on: :desc,url: :desc).limit(20).as_json)
   end
 
+  def test
+  end
+
   def mmls
     page = @agent.get("https://mmls.mmu.edu.my")
     form = page.form
