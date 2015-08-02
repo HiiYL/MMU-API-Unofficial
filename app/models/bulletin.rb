@@ -28,6 +28,9 @@ def update_bulletin
         bulletin.expired_on = Time.parse(bulletin_details[1].split(" : ")[1])
         bulletin.author = bulletin_details[2].split(" : ")[1].delete("\t")
         bulletin.contents = bulletin_post.xpath("div/div")
+        if (bulletin.contents.include?('<a href="'))
+          bulletin.contents.gsub!('href="', '<a href="https://online.mmu.edu.my/')
+        end
         bulletin.save
       end
       bulletin_number = bulletin_number + 1
