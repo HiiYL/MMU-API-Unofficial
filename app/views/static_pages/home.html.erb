@@ -5,11 +5,7 @@
           <li>
             <div class="collapsible-header"><%= bulletin.title %></div>
             <div class="collapsible-body"><p>
-              <% if bulletin.contents.include? '<a href="' %>
-                <%= bulletin.contents.gsub!('href="', '<a href="https://online.mmu.edu.my/').html_safe %>
-              <% else %>
                 <%= bulletin.contents.html_safe %>
-              <% end %>
             </p></div>
           </li>
       <% end %>
