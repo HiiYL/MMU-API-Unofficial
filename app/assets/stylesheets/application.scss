@@ -1,4 +1,9 @@
 @import "materialize";
+.collapsible-header {
+	text-overflow:ellipsis;
+	overflow: hidden;
+	white-space: nowrap;
+}
 .collapsible-body {
 	margin-left: 20px;
 	margin-right: 20px;
