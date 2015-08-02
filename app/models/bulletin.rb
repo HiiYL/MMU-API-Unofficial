@@ -7,6 +7,8 @@ public
 def update_bulletin
     print "PERFORMING CRON JOB \n"
     agent = Mechanize.new
+    agent.keep_alive = true
+    agent.agent.http.retry_change_requests = true
     page = agent.get("https://online.mmu.edu.my/index.php")
     form = page.form
     bulletins = []
