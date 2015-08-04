@@ -1,4 +1,12 @@
 <h1>API TEST</h1>
+<h3>Simple API Test </h3>
+<%= form_tag simple_timetable_api_path, method: :post do %>
+  <%= label_tag :student_ID %><br>
+  <%= text_field_tag(:student_id) %><br>
+  <%= label_tag :Camsys_PASSWORD %> <br>
+  <%= password_field_tag(:password) %>
+  <%= submit_tag "Submit" %>
+<% end %>
 <h3>CAMSYS LOGIN TEST V2 </h3>
 <%= form_tag login_camsys_v2_path, method: :post do %>
   <%= label_tag :student_ID %><br>

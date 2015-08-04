@@ -3,6 +3,8 @@ Rails.application.routes.draw do
   post 'login_mmls' => 'api#login_mmls'
   post 'login_camsys' => 'api#login_camsys'
   post 'login_camsys_v2' => 'api#login_camsys_v2'
+
+  post 'simple_timetable_api' => 'api#simple_timetable'
   get 'mmls_api' => 'api#mmls'
   post 'mmls_api' => 'api#mmls', :defaults => { :format => 'json' }
   get 'bulletin_api' => 'api#bulletin_api'
