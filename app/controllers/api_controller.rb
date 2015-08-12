@@ -337,6 +337,7 @@ class ApiController < ApplicationController
     domain = "mmls.mmu.edu.my"
     cookie = Mechanize::Cookie.new :domain => domain, :name => name, :value => value, :path => '/', :expires => (Date.today + 1).to_s
     @agent.cookie_jar.add(cookie)
+    @agent.redirect_ok = false
 
     page = @agent.get(url)
     if page.code != "302"
