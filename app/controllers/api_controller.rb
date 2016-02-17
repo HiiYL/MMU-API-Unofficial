@@ -6,6 +6,9 @@ class ApiController < ApplicationController
     render json: JSON.pretty_generate( Bulletin.order(posted_on: :desc,url: :desc).limit(20).as_json)
   end
 
+  def test
+  end
+
   def mmls
     page = @agent.get("https://mmls.mmu.edu.my")
     form = page.form
@@ -204,6 +207,22 @@ class ApiController < ApplicationController
     end
   end
 
+  def simple_timetable
+    @agent.agent.http.verify_mode = OpenSSL::SSL::VERIFY_NONE
+    page = @agent.get("https://cms.mmu.edu.my")
+    form = page.form
+    form.userid = params[:student_id]
+    form.pwd = params[:password]
+    page = @agent.submit(form)
+    if page.parser.xpath('//*[@id="login_error"]').empty?
+      page = @agent.get("https://cms.mmu.edu.my/psc/csprd/EMPLOYEE/HRMS/c/SA_LEARNER_SERVICES.SSR_SSENRL_SCHD_W.GBL?Page=SSR_SS_WEEK&Action=A&ACAD_CAREER=UGRD&AS_OF_DATE=2015-06-22&EMPLID=1141125087&INSTITUTION=MMU01&STRM=1510&TargetFrameName=None")
+      table = page.parser.xpath('//*[@id="WEEKLY_SCHED_HTMLAREA"]')
+      render json: {timetable: table.to_s}
+    else
+      render json: {error: "Incorrect CAMSYS username or password", status: 400}, status: 400
+    end
+  end
+
   def timetable
     @agent.agent.http.verify_mode = OpenSSL::SSL::VERIFY_NONE
     page = @agent.get("https://cms.mmu.edu.my")
@@ -318,6 +337,7 @@ class ApiController < ApplicationController
     domain = "mmls.mmu.edu.my"
     cookie = Mechanize::Cookie.new :domain => domain, :name => name, :value => value, :path => '/', :expires => (Date.today + 1).to_s
     @agent.cookie_jar.add(cookie)
+    @agent.redirect_ok = false
 
     page = @agent.get(url)
     if page.code != "302"

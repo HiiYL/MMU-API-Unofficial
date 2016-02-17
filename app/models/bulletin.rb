@@ -7,6 +7,8 @@ public
 def update_bulletin
     print "PERFORMING CRON JOB \n"
     agent = Mechanize.new
+    agent.keep_alive = true
+    agent.agent.http.retry_change_requests = true
     page = agent.get("https://online.mmu.edu.my/index.php")
     form = page.form
     bulletins = []
@@ -28,6 +30,9 @@ def update_bulletin
         bulletin.expired_on = Time.parse(bulletin_details[1].split(" : ")[1])
         bulletin.author = bulletin_details[2].split(" : ")[1].delete("\t")
         bulletin.contents = bulletin_post.xpath("div/div")
+        if (bulletin.contents.include?('<a href="'))
+          bulletin.contents.gsub!('href="', '<a href="https://online.mmu.edu.my/')
+        end
         bulletin.save
       end
       bulletin_number = bulletin_number + 1

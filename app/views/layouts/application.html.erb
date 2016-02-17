@@ -12,13 +12,13 @@
 <nav class="light-blue lighten-1" role="navigation">
     <div class="nav-wrapper container"><a id="logo-container" href="#" class="brand-logo">MMU API</a>
       <ul class="right hide-on-med-and-down">
-        <li><a href="#">Home</a></li>
-        <li><a href="#">Bulletin</a></li>
+        <li><%= link_to "Home", root_path %></li>
+        <li><%= link_to "Bulletin", bulletin_path %></li>
       </ul>
 
       <ul id="nav-mobile" class="side-nav" style="left: -250px;">
-        <li><a href="#">Home</a></li>
-        <li><a href="#">Bulletin</a></li>
+        <li><%= link_to "Home", root_path %></li>
+        <li><%= link_to "Bulletin", bulletin_path %></li>
       </ul>
       <a href="#" data-activates="nav-mobile" class="button-collapse"><i class="material-icons">menu</i></a>
     </div>
