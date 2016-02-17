@@ -283,7 +283,7 @@ class ApiController < ApplicationController
     print "Page acquired \n"
     form = page.form
     form.stud_id = params[:student_id]
-    form.stud_pswrd = params[:password]
+    form.stud_pswrd = params[:mmls_password]
     token = form._token
     page = @agent.submit(form)
     details_array = page.parser.xpath('/html/body/div[1]/div[3]/div/div/div/div[2]/div[2]/div[2]').text.delete("\r\t()").split("\n")
