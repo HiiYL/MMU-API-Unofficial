@@ -421,7 +421,7 @@ class ApiController < ApplicationController
        end
 
 
-      response = firebase.set("subjects/PWC1010", { name: subject.name, weeks: weeks_firebase, subject_files: subject_files_firebase })
+      response = firebase.set("subjects/" + subject.name.split(" - ")[0], { name: subject.name, weeks: weeks_firebase, subject_files: subject_files_firebase })
        render :json => subject.as_json(
           :include => [{ :weeks => {
           :include => {:announcements => {:include => :subject_files} }}}, :subject_files])
