@@ -22,7 +22,7 @@ def update_bulletin
     page = agent.get("https://online.mmu.edu.my/bulletin.php")
     bulletin_number = 1
 
-    while !page.parser.xpath("//*[@id='tabs-1']/div[#{bulletin_number}]").empty? and bulletin_number <= 20
+    while !page.parser.xpath("//*[@id='tabs-1']/div[#{bulletin_number}]").empty? and bulletin_number <= 100
       url = page.parser.xpath("//*[@id='tabs-1']/div[#{bulletin_number}]/p/a/@href").text
       unless (Bulletin.find_by_url(url))
         print "EXECUTING " + bulletin_number.to_s + "\n"

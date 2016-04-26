@@ -408,11 +408,11 @@ class ApiController < ApplicationController
             }
             annoucement_firebase = { title:announcement.title,
               contents: announcement.contents, author:announcement.author,
-              posted_date:announcement.posted_date, file: announcements_file_firebase }
+              posted_date:announcement.posted_date.to_time.to_i, file: announcements_file_firebase }
           else
           annoucement_firebase = { title:announcement.title,
               contents: announcement.contents, author:announcement.author,
-              posted_date:announcement.posted_date}
+              posted_date:announcement.posted_date.to_time.to_i}
           end
           announcements_firebase.push(annoucement_firebase)
           announcement_number = announcement_number + 1
