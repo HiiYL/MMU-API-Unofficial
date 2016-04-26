@@ -52,6 +52,7 @@ class ApiController < ApplicationController
                 file.content_type = file_details_hash["content_type"]
                 file.file_path = file_details_hash["file_path"]
               end
+
               announcement_number = announcement_number + 1
             end
             week_number = week_number + 1
@@ -339,6 +340,10 @@ class ApiController < ApplicationController
     @agent.cookie_jar.add(cookie)
     @agent.redirect_ok = false
 
+
+    base_uri = 'https://mmu-hub.firebaseio.com/'
+    firebase = Firebase::Client.new(base_uri)
+
     page = @agent.get(url)
     if page.code != "302"
       print "Page acquired, processing .. + \n"
@@ -346,12 +351,15 @@ class ApiController < ApplicationController
       subject_name = page.parser.xpath("/html/body/div[1]/div[3]/div/div/div/div[1]/div[1]/h3/div").text.delete("\n\t")
       subject = Subject.new
       subject.name = subject_name
+      weeks_firebase = []
       week_number = 1
       while !page.parser.xpath("//*[@id='accordion']/div[#{week_number}]/div[1]/h3/a").empty? do
         week = subject.weeks.build
         week.title = page.parser.xpath("//*[@id='accordion']/div[#{week_number}]/div[1]/h3/a").text.delete("\r").delete("\n").delete("\t").split(" - ")[0]
         announcement_number = 1
         announcement_generic_path = page.parser.xpath("//*[@id='accordion']/div[#{week_number}]/div[2]/div/div/div[1]")
+
+        announcements_firebase = []
         while !announcement_generic_path.xpath("div[#{announcement_number}]/font").empty? do
           posted_date = announcement_generic_path.xpath("div[#{announcement_number}]/div[1]/i[1]").text.delete("\r").delete("\n").delete("\t").split("               ").last
           valid = false
@@ -363,6 +371,8 @@ class ApiController < ApplicationController
             valid = true
           end
 
+          announcement_firebase = {}
+
           if(valid)
             announcement = week.announcements.build
             announcement.title = announcement_generic_path.xpath("div[#{announcement_number}]/font").inner_text.delete("\r").delete("\t")
@@ -371,6 +381,10 @@ class ApiController < ApplicationController
             announcement.contents = sanitized_contents.delete("\r\t")
             announcement.author = announcement_generic_path.xpath("div[#{announcement_number}]/div[1]/i[1]").text.delete("\r\n\t\t\t\t\t;").split("  ").first[3..-1]
             announcement.posted_date = posted_date
+
+            annoucement_firebase = { title:announcement.title,
+             contents: announcement.contents, author:announcement.author,
+             posted_date:announcement.posted_date }
 
             if !announcement_generic_path.xpath("div[#{announcement_number}]").at('form').nil?
               print("FILES EXISTS !!!")
@@ -385,10 +399,14 @@ class ApiController < ApplicationController
               file.file_path = file_details_hash["file_path"]
             end
           end
+          announcements_firebase.push(annoucement_firebase)
           announcement_number = announcement_number + 1
         end
-          week_number = week_number + 1
+        weeks_firebase.push({ title: week.title, announcements: announcements_firebase})
+        week_number = week_number + 1
        end
+
+       subject_files_firebase = []
        download_forms = page.forms_with(:action => 'https://mmls.mmu.edu.my/form-download-content').uniq{ |x| x.content_id }
        download_forms.each do |form|
          file_details_hash =  Hash[form.keys.zip(form.values)]
@@ -398,7 +416,12 @@ class ApiController < ApplicationController
          file.content_id = file_details_hash["content_id"]
          file.content_type = file_details_hash["content_type"]
          file.file_path = file_details_hash["file_path"]
+         subject_files_firebase.push({file_name: file.file_name, token: file.token,
+          content_id:file.content_id, content_type: file.content_type, file_path: file.file_path})
        end
+
+
+      response = firebase.set("subjects/PWC1010", { name: subject.name, weeks: weeks_firebase, subject_files: subject_files_firebase })
        render :json => subject.as_json(
           :include => [{ :weeks => {
           :include => {:announcements => {:include => :subject_files} }}}, :subject_files])

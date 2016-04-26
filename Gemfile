@@ -38,6 +38,8 @@ gem 'mechanize'
 
 gem 'pg'
 
+gem 'firebase'
+
 
 
 # Use Unicorn as the app server
