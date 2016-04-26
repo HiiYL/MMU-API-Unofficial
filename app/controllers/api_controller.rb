@@ -351,6 +351,7 @@ class ApiController < ApplicationController
       subject_name = page.parser.xpath("/html/body/div[1]/div[3]/div/div/div/div[1]/div[1]/h3/div").text.delete("\n\t")
       subject = Subject.new
       subject.name = subject_name
+      subject_campus = ""
       weeks_firebase = []
       week_number = 1
       while !page.parser.xpath("//*[@id='accordion']/div[#{week_number}]/div[1]/h3/a").empty? do
@@ -370,7 +371,6 @@ class ApiController < ApplicationController
           else
             valid = true
           end
-
           announcement_firebase = {}
 
           if(valid)
@@ -402,6 +402,9 @@ class ApiController < ApplicationController
             file.content_id = file_details_hash["content_id"]
             file.content_type = file_details_hash["content_type"]
             file.file_path = file_details_hash["file_path"]
+            if subject_campus == ""
+              subject_campus = file.file_path.split("/")[0]
+            end
             announcements_file_firebase = { file_name: file.file_name,
              token: file.token, content_id: file.content_id,
              content_type: file.content_type, file_path: file.file_path
@@ -431,12 +434,21 @@ class ApiController < ApplicationController
          file.content_id = file_details_hash["content_id"]
          file.content_type = file_details_hash["content_type"]
          file.file_path = file_details_hash["file_path"]
+         if subject_campus == ""
+          subject_campus = file.file_path.split("/")[0]
+         end
          subject_files_firebase.push({file_name: file.file_name, token: file.token,
           content_id:file.content_id, content_type: file.content_type, file_path: file.file_path})
        end
 
 
-      response = firebase.set("subjects/" + subject.name.split(" - ")[0], { name: subject.name, weeks: weeks_firebase, subject_files: subject_files_firebase })
+      unique_name = [subject.name.split(" - ")[0],subject_campus].join('_')
+      print
+      print
+      print unique_name
+      print
+      print
+      response = firebase.set("subjects/" + unique_name, { name: subject.name, weeks: weeks_firebase, subject_files: subject_files_firebase })
        render :json => subject.as_json(
           :include => [{ :weeks => {
           :include => {:announcements => {:include => :subject_files} }}}, :subject_files])
