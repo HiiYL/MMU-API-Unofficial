@@ -420,7 +420,9 @@ class ApiController < ApplicationController
           announcements_firebase.push(annoucement_firebase)
           announcement_number = announcement_number + 1
         end
-        weeks_firebase.push({ title: week.title, announcements: announcements_firebase})
+        if announcements_firebase.length > 0
+          weeks_firebase.push({ title: week.title, announcements: announcements_firebase})
+        end
         week_number = week_number + 1
        end
 
