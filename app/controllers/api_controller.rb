@@ -377,29 +377,42 @@ class ApiController < ApplicationController
             announcement = week.announcements.build
           else
             announcement = Announcement.new
-            announcement.title = announcement_generic_path.xpath("div[#{announcement_number}]/font").inner_text.delete("\r").delete("\t")
-            contents = announcement_generic_path.xpath("div[#{announcement_number}]").children[7..-1]
-            sanitized_contents = Sanitize.clean(contents, :remove_contents => ['script', 'style'])
-            announcement.contents = sanitized_contents.delete("\r\t")
-            announcement.author = announcement_generic_path.xpath("div[#{announcement_number}]/div[1]/i[1]").text.delete("\r\n\t\t\t\t\t;").split("  ").first[3..-1]
-            announcement.posted_date = posted_date
+          end
+          announcement.title = announcement_generic_path.xpath("div[#{announcement_number}]/font").inner_text.delete("\r").delete("\t")
+          contents = announcement_generic_path.xpath("div[#{announcement_number}]").children[7..-1]
+          sanitized_contents = Sanitize.clean(contents, :remove_contents => ['script', 'style'])
+          announcement.contents = sanitized_contents.delete("\r\t")
+          announcement.author = announcement_generic_path.xpath("div[#{announcement_number}]/div[1]/i[1]").text.delete("\r\n\t\t\t\t\t;").split("  ").first[3..-1]
+          announcement.posted_date = posted_date
 
-            annoucement_firebase = { title:announcement.title,
-             contents: announcement.contents, author:announcement.author,
-             posted_date:announcement.posted_date }
-
-            if !announcement_generic_path.xpath("div[#{announcement_number}]").at('form').nil?
-              print("FILES EXISTS !!!")
-              form_nok = announcement_generic_path.xpath("div[#{announcement_number}]").at('form')
-              form = Mechanize::Form.new form_nok, @agent, page
-              file_details_hash =  Hash[form.keys.zip(form.values)]
+ 
+          announcements_file_firebase = {}
+          if !announcement_generic_path.xpath("div[#{announcement_number}]").at('form').nil?
+            print("FILES EXISTS !!!")
+            form_nok = announcement_generic_path.xpath("div[#{announcement_number}]").at('form')
+            form = Mechanize::Form.new form_nok, @agent, page
+            file_details_hash =  Hash[form.keys.zip(form.values)]
+            if(valid)
               file = announcement.subject_files.build
-              file.file_name = file_details_hash["file_name"]
-              file.token = file_details_hash["_token"]
-              file.content_id = file_details_hash["content_id"]
-              file.content_type = file_details_hash["content_type"]
-              file.file_path = file_details_hash["file_path"]
+            else
+              file = SubjectFile.new
             end
+            file.file_name = file_details_hash["file_name"]
+            file.token = file_details_hash["_token"]
+            file.content_id = file_details_hash["content_id"]
+            file.content_type = file_details_hash["content_type"]
+            file.file_path = file_details_hash["file_path"]
+            announcements_file_firebase = { file_name: file.file_name,
+             token: file.token, content_id: file.content_id,
+             content_type: file.content_type, file_path: file.file_path
+            }
+            annoucement_firebase = { title:announcement.title,
+              contents: announcement.contents, author:announcement.author,
+              posted_date:announcement.posted_date, file: announcements_file_firebase }
+          else
+          annoucement_firebase = { title:announcement.title,
+              contents: announcement.contents, author:announcement.author,
+              posted_date:announcement.posted_date}
           end
           announcements_firebase.push(annoucement_firebase)
           announcement_number = announcement_number + 1
