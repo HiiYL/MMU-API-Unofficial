@@ -441,13 +441,11 @@ class ApiController < ApplicationController
           content_id:file.content_id, content_type: file.content_type, file_path: file.file_path})
        end
 
-
-      unique_name = [subject.name.split(" - ")[0],subject_campus].join('_')
-      print
-      print
-      print unique_name
-      print
-      print
+      if subject_campus != ""
+        unique_name = [subject.name.split(" - ")[0],subject_campus].join('_')
+      else
+        unique_name = subject.name.split(" - ")[0]
+      end
       response = firebase.set("subjects/" + unique_name, { name: subject.name, weeks: weeks_firebase, subject_files: subject_files_firebase })
        render :json => subject.as_json(
           :include => [{ :weeks => {
