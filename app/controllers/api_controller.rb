@@ -375,6 +375,8 @@ class ApiController < ApplicationController
 
           if(valid)
             announcement = week.announcements.build
+          else
+            announcement = Announcement.new
             announcement.title = announcement_generic_path.xpath("div[#{announcement_number}]/font").inner_text.delete("\r").delete("\t")
             contents = announcement_generic_path.xpath("div[#{announcement_number}]").children[7..-1]
             sanitized_contents = Sanitize.clean(contents, :remove_contents => ['script', 'style'])
