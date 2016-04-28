@@ -7,7 +7,6 @@ ruby "2.3.0"
 gem 'rails', '4.2.1'
 
 gem 'materialize-sass'
-gem 'puma'
 gem 'sanitize'
 # Use sqlite3 as the database for Active Record
 gem 'dotenv-rails', :groups => [:development, :test]
@@ -59,5 +58,8 @@ group :development, :test do
 
   # Spring speeds up development by keeping your application running in the background. Read more: https://github.com/rails/spring
   gem 'spring'
+end
+
+group :production do
 end
 

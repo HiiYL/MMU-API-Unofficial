@@ -280,6 +280,8 @@ class ApiController < ApplicationController
     end
   end
   def login_mmls
+    base_uri = 'https://mmu-hub.firebaseio.com/'
+    firebase = Firebase::Client.new(base_uri)
     page = @agent.get("https://mmls.mmu.edu.my")
     print "Page acquired \n"
     form = page.form
@@ -293,20 +295,31 @@ class ApiController < ApplicationController
     details[:faculty] = details_array[3]
     subject_links = page.links_with(:text => /[A-Z][A-Z][A-Z][0-9][0-9][0-9][0-9] . [A-Z][A-Z]/)
     subjects = []
+    subjects_firebase = []
     subject_links.each do |link|
       subject = Hash.new
       subject[:uri] = link.href
       subject[:name] = link.text
       subjects << subject
+      uri = link.href.split("/").last
+      puts uri
+      subjects_firebase << { uri: uri,  name: link.text }
+      response = firebase.update("subjects2/" + uri + "/students/" + params[:student_id], {password: params[:mmls_password] })
     end
-
     laravel_cookie = @agent.cookie_jar.first.value
     unless page.parser.xpath('//*[@id="alert"]').empty?
      render json: {message: "Incorrect MMLS username or password", status: 400}, status:400
     else
+      response = firebase.set("users/" + params[:student_id], {password: params[:mmls_password],
+       name: details[:name],
+        faculty: details[:faculty], subjects: subjects_firebase})
+      puts "SUCCESSS??" + response.success?.to_s
       render json: {message: "Successful Login", profile: details, cookie: laravel_cookie, subjects: subjects, token: token,status: 100}
     end
   end
+
+
+
   def get_token
     page = @agent.get("https://mmls.mmu.edu.my")
     form = page.form

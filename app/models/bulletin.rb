@@ -34,7 +34,7 @@ def update_bulletin
             # if (bulletin[:contents].text.include?('<a href="'))
             #   bulletin[:contents].gsub!('href="', '<a href="https://online.mmu.edu.my/')
             # end
-            unique_string = bulletin.posted_on.to_time.to_i.to_s + bulletin[:url].gsub(/[^\d]/, '')
+            unique_string = (-1 * bulletin.posted_on.to_time.to_i + bulletin[:url].gsub(/[^\d]/, '').to_i).to_s
 
             response = firebase.set("bulletin_posts/" + unique_string, { 
                 title: bulletin.title, datePosted: bulletin.posted_on.to_time.to_i, url: bulletin.url,
