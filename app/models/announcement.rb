@@ -18,6 +18,12 @@ public
     end
   end
 
+  def refresh_mmls_subjects(subjects, auth_key)
+    for subject in subjects
+      mmls_refresh_subject_firebase_no_weeks(subjects["uri"], auth_key)
+    end
+  end
+
   def refresh_mmls()
     base_uri = 'https://mmu-hub.firebaseio.com/'
     firebase = Firebase::Client.new(base_uri)
@@ -29,7 +35,7 @@ public
         mmls_password = value["password"]
         puts student_id + " " + mmls_password
         auth_key = login_mmls_headless(student_id, mmls_password)
-        success = mmls_refresh_subject_firebase_no_weeks(subject_url, student_id,mmls_password,auth_key)
+        success = mmls_refresh_subject_firebase_no_weeks(subject_url,auth_key)
         if success
           break
         end
@@ -37,7 +43,8 @@ public
     end
   end
 
-  def mmls_refresh_subject_firebase_no_weeks(subject_url, student_id, mmls_password,auth_key)
+
+  def mmls_refresh_subject_firebase_no_weeks(subject_url,auth_key)
     set_agent()
     value = auth_key
     url = "https://mmls.mmu.edu.my/" + subject_url

@@ -304,7 +304,7 @@ class ApiController < ApplicationController
       uri = link.href.split("/").last
       puts uri
       subjects_firebase << { uri: uri,  name: link.text }
-      response = firebase.update("subjects2/" + uri + "/students/" + params[:google_auth_uid], {student_id: params[:student_id], password: params[:mmls_password] })
+      response = firebase.update("subjects3/" + uri + "/students/" + params[:google_auth_uid], {student_id: params[:student_id], password: params[:mmls_password] })
     end
     laravel_cookie = @agent.cookie_jar.first.value
     unless page.parser.xpath('//*[@id="alert"]').empty?
@@ -315,6 +315,7 @@ class ApiController < ApplicationController
         faculty: details[:faculty], subjects: subjects_firebase, id: params[:student_id]})
       puts "SUCCESSS??" + response.success?.to_s
       render json: {message: "Successful Login", profile: details, cookie: laravel_cookie, subjects: subjects, token: token,status: 100}
+      Announcement.refresh_mmls_with_subjects(subjects_firebase, laravel_cookie)
     end
   end
 
