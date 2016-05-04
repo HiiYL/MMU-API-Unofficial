@@ -105,6 +105,7 @@ GEM
       nokogiri
     ntlm-http (0.1.1)
     pg (0.18.2)
+    puma (2.12.2)
     rack (1.6.4)
     rack-test (0.6.3)
       rack (>= 1.0)
@@ -195,6 +196,7 @@ DEPENDENCIES
   materialize-sass
   mechanize
   pg
+  puma
   rails (= 4.2.1)
   rails_12factor
   sanitize
