@@ -23,16 +23,22 @@ public
     firebase = Firebase::Client.new(base_uri)
     response = firebase.get("subjects2")
     response.body.each do |key, value|
-      puts value
-      student_id = value.values.first.keys.first
-      password = value.values.first.values.first.values.first
-      puts student_id + " " + password
-      mmls_refresh_subject_firebase(key, student_id,password)
-  	end
+      subject_url = key
+      value["students"].each do |key,value|
+        student_id = value["student_id"]
+        mmls_password = value["password"]
+        puts student_id + " " + mmls_password
+        auth_key = login_mmls_headless(student_id, mmls_password)
+        success = mmls_refresh_subject_firebase(subject_url, student_id,mmls_password,auth_key)
+        if success
+          break
+        end
+      end
+    end
   end
 
-  def mmls_refresh_subject_firebase(subject_url, student_id, mmls_password)
-    value = login_mmls_headless(student_id, mmls_password)
+  def mmls_refresh_subject_firebase(subject_url, student_id, mmls_password,auth_key)
+    value = auth_key
     url = "https://mmls.mmu.edu.my/" + subject_url
     name = "laravel_session"
     domain = "mmls.mmu.edu.my"
@@ -52,7 +58,7 @@ public
       subject = Subject.new
       subject.name = subject_name
       subject_campus = ""
-      weeks_firebase = []
+      weeks_firebase = Hash.new
       week_number = 1
       while !page.parser.xpath("//*[@id='accordion']/div[#{week_number}]/div[1]/h3/a").empty? do
         week = subject.weeks.build
@@ -72,9 +78,9 @@ public
             announcement = Announcement.new
           end
           announcement.title = announcement_generic_path.xpath("div[#{announcement_number}]/font").inner_text.delete("\r").delete("\t")
-          contents = announcement_generic_path.xpath("div[#{announcement_number}]").children[7..-1]
-          sanitized_contents = Sanitize.clean(contents, :remove_contents => ['script', 'style'])
-          announcement.contents = sanitized_contents.delete("\r\t")
+          announcement.contents = announcement_generic_path.xpath("div[#{announcement_number}]").children[7..-1]
+          # sanitized_contents = Sanitize.clean(contents, :remove_contents => ['script', 'style'])
+          # announcement.contents = sanitized_contents.delete("\r\t")
           announcement.author = announcement_generic_path.xpath("div[#{announcement_number}]/div[1]/i[1]").text.delete("\r\n\t\t\t\t\t;").split("  ").first[3..-1]
           announcement.posted_date = posted_date
 
@@ -114,7 +120,8 @@ public
           announcement_number = announcement_number + 1
         end
         if announcements_firebase.length > 0
-          weeks_firebase.push({ title: week.title, announcements: announcements_firebase})
+          filtered_weekname = week.title.split("  (")[0].delete("^0-9")
+          weeks_firebase[filtered_weekname] =  { title: week.title, announcements: announcements_firebase}
         end
         week_number = week_number + 1
        end
@@ -141,12 +148,13 @@ public
       else
         unique_name = subject.name.split(" - ")[0]
       end
-      response = firebase.set("subjects2/" + subject_url, { name: subject.name, weeks: weeks_firebase, subject_files: subject_files_firebase })
-      return response
+      response = firebase.update("subjects2/" + subject_url, { name: subject.name, weeks: weeks_firebase, subject_files: subject_files_firebase })
+      return true
        # render :json => subject.as_json(
        #    :include => [{ :weeks => {
        #    :include => {:announcements => {:include => :subject_files} }}}, :subject_files])
      else
+       return false
        # render json: {message: "Cookie Expired", status: 400}, status: 400
      end
   end
