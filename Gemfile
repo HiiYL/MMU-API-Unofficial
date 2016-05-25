@@ -6,6 +6,8 @@ ruby "2.3.0"
 # ruby "2.2.2"
 gem 'rails', '4.2.1'
 
+gem 'gcm'
+
 gem 'materialize-sass'
 gem 'sanitize'
 # Use sqlite3 as the database for Active Record

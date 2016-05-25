@@ -20,12 +20,12 @@ public
 
   def refresh_mmls_subjects(subjects, auth_key)
     for subject in subjects
-      mmls_refresh_subject_firebase_no_weeks(subjects["uri"], auth_key)
+      mmls_refresh_subject_firebase_no_weeks(subject[:uri], auth_key)
     end
   end
 
   def refresh_mmls()
-    base_uri = 'https://mmu-hub.firebaseio.com/'
+    base_uri = 'https://mmu-hub-14826.firebaseio.com/'
     firebase = Firebase::Client.new(base_uri)
     response = firebase.get("subjects2")
     response.body.each do |key, value|
@@ -55,7 +55,7 @@ public
     @agent.redirect_ok = false
 
 
-    base_uri = 'https://mmu-hub.firebaseio.com/'
+    base_uri = 'https://mmu-hub-14826.firebaseio.com/'
     firebase = Firebase::Client.new(base_uri)
 
     page = @agent.get(url)
@@ -79,7 +79,7 @@ public
         end
         for announcement in week.xpath("div[2]/div/div/div[1]/div[1]")
           announcement_firebase = Hash.new
-          announcement_firebase["contents"] = announcement.to_s
+          announcement_firebase["contents"] = announcement.to_html
           announcement_firebase["title"] = announcement.xpath("font").text().strip()
           announcement_firebase["week_number"] = week_number
           # announcement_firebase["week_title"] = week_number
@@ -102,7 +102,10 @@ public
           announcements_firebase.push(announcement_firebase)
         end
       end
-      subject_files_firebase = []
+
+      subject_files_firebase = Hash.new
+      content_activity = ""
+      i = 0
       download_forms = page.forms_with(:action => 'https://mmls.mmu.edu.my/form-download-content').uniq{ |x| x.content_id }
       download_forms.each do |form|
         file_details_hash =  Hash[form.keys.zip(form.values)]
@@ -113,7 +116,17 @@ public
         file["content_type"] = file_details_hash["content_type"]
         file["file_path"] = file_details_hash["file_path"]
 
-        subject_files_firebase.push(file)
+        type = file["file_path"].split("/").last
+        content_activity = form.form_node.xpath('ancestor::*[@class="content_activity"]')
+        # content_activity = form.form_node.xpath("../..")
+        file["title"] = content_activity.xpath("font").text().strip()
+        file["author"] = content_activity.xpath("div/i[1]/text()").text.delete("\r\n\t;").split("  ").first[3..-1]
+        file["posted_date"] = content_activity.xpath("div/i[1]/text()").text.delete("\r\n\t;").split(" ").last.to_time.to_i
+        file["description"] = content_activity.xpath("p").to_html
+        file["priority"] = -file["posted_date"]
+        i = i + 1
+
+        subject_files_firebase[file["content_id"]] = file
       end
 
       response = firebase.update("subjects3/" + subject_url, { name: subject.name, announcements: announcements_firebase, subject_files: subject_files_firebase})
@@ -236,7 +249,7 @@ public
   #   @agent.redirect_ok = false
 
 
-  #   base_uri = 'https://mmu-hub.firebaseio.com/'
+  #   base_uri = 'https://mmu-hub-14826.firebaseio.com/'
   #   firebase = Firebase::Client.new(base_uri)
 
   #   page = @agent.get(url)

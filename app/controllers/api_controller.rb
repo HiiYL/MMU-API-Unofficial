@@ -280,7 +280,7 @@ class ApiController < ApplicationController
     end
   end
   def login_mmls
-    base_uri = 'https://mmu-hub.firebaseio.com/'
+    base_uri = 'https://mmu-hub-14826.firebaseio.com/'
     firebase = Firebase::Client.new(base_uri)
     page = @agent.get("https://mmls.mmu.edu.my")
     print "Page acquired \n"
@@ -315,7 +315,13 @@ class ApiController < ApplicationController
         faculty: details[:faculty], subjects: subjects_firebase, id: params[:student_id]})
       puts "SUCCESSS??" + response.success?.to_s
       render json: {message: "Successful Login", profile: details, cookie: laravel_cookie, subjects: subjects, token: token,status: 100}
-      Announcement.refresh_mmls_with_subjects(subjects_firebase, laravel_cookie)
+      
+
+      puts subjects_firebase
+      puts
+      puts
+      puts
+      Announcement.refresh_mmls_subjects(subjects_firebase, laravel_cookie)
     end
   end
 
@@ -355,7 +361,7 @@ class ApiController < ApplicationController
     @agent.redirect_ok = false
 
 
-    base_uri = 'https://mmu-hub.firebaseio.com/'
+    base_uri = 'https://mmu-hub-14826.firebaseio.com/'
     firebase = Firebase::Client.new(base_uri)
 
     page = @agent.get(url)

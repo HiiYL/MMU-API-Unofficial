@@ -5,7 +5,7 @@ class Bulletin < ActiveRecord::Base
 end
 public
 def update_bulletin
-    base_uri = 'https://mmu-hub.firebaseio.com/'
+    base_uri = 'https://mmu-hub-14826.firebaseio.com/'
     firebase = Firebase::Client.new(base_uri)
     print "PERFORMING CRON JOB \n"
     agent = Mechanize.new
@@ -39,6 +39,9 @@ def update_bulletin
             response = firebase.set("bulletin_posts/" + unique_string, { 
                 title: bulletin.title, datePosted: bulletin.posted_on.to_time.to_i, url: bulletin.url,
                  dateExpired: bulletin.expired_on.to_time.to_i, author: bulletin.author, contents: bulletin.contents})
+            response = gcm.create(key_name: "appUser-Chris",
+                project_id: "my_project_id", # https://developers.google.com/cloud-messaging/gcm#senderid
+                registration_ids:["4", "8", "15", "16", "23", "42"])
             print "SUCCESSSS????" + response.success?.to_s + "\n"
             if response.success?
               bulletin.save
