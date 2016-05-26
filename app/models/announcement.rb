@@ -26,7 +26,7 @@ public
 
   def refresh_mmls()
     base_uri = 'https://mmu-hub-14826.firebaseio.com/'
-    firebase = Firebase::Client.new(base_uri)
+    firebase = Firebase::Client.new(base_uri,ENV["FIREBASE_SECRET"])
     response = firebase.get("subjects2")
     response.body.each do |key, value|
       subject_url = key
@@ -56,7 +56,7 @@ public
 
 
     base_uri = 'https://mmu-hub-14826.firebaseio.com/'
-    firebase = Firebase::Client.new(base_uri)
+    firebase = Firebase::Client.new(base_uri,ENV["FIREBASE_SECRET"])
 
     page = @agent.get(url)
     if page.code != "302"
@@ -250,7 +250,7 @@ public
 
 
   #   base_uri = 'https://mmu-hub-14826.firebaseio.com/'
-  #   firebase = Firebase::Client.new(base_uri)
+  #   firebase = Firebase::Client.new(base_uri,ENV["FIREBASE_SECRET"])
 
   #   page = @agent.get(url)
   #   if page.code != "302"

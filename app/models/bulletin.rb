@@ -6,7 +6,7 @@ end
 public
 def update_bulletin
     base_uri = 'https://mmu-hub-14826.firebaseio.com/'
-    firebase = Firebase::Client.new(base_uri)
+    firebase = Firebase::Client.new(base_uri,ENV["FIREBASE_SECRET"])
     print "PERFORMING CRON JOB \n"
     agent = Mechanize.new
     agent.keep_alive = true
@@ -30,18 +30,15 @@ def update_bulletin
             bulletin.posted_on = Time.parse(bulletin_details[0].split(" ")[2..5].join(" "))
             bulletin.expired_on = Time.parse(bulletin_details[1].split(" : ")[1])
             bulletin.author = bulletin_details[2].split(" : ")[1].delete("\t")
-            bulletin.contents = bulletin_post.xpath("div/div").to_s.gsub!('href="', '<a href="https://online.mmu.edu.my/')
-            # if (bulletin[:contents].text.include?('<a href="'))
-            #   bulletin[:contents].gsub!('href="', '<a href="https://online.mmu.edu.my/')
-            # end
+            bulletin.contents = bulletin_post.xpath("div/div").to_s
+            if (bulletin.contents.include?('<a href="'))
+              bulletin[:contents].gsub!('href="', '<a href="https://online.mmu.edu.my/')
+            end
             unique_string = (-1 * bulletin.posted_on.to_time.to_i + bulletin[:url].gsub(/[^\d]/, '').to_i).to_s
 
             response = firebase.set("bulletin_posts/" + unique_string, { 
                 title: bulletin.title, datePosted: bulletin.posted_on.to_time.to_i, url: bulletin.url,
                  dateExpired: bulletin.expired_on.to_time.to_i, author: bulletin.author, contents: bulletin.contents})
-            response = gcm.create(key_name: "appUser-Chris",
-                project_id: "my_project_id", # https://developers.google.com/cloud-messaging/gcm#senderid
-                registration_ids:["4", "8", "15", "16", "23", "42"])
             print "SUCCESSSS????" + response.success?.to_s + "\n"
             if response.success?
               bulletin.save

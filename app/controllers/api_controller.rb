@@ -281,7 +281,7 @@ class ApiController < ApplicationController
   end
   def login_mmls
     base_uri = 'https://mmu-hub-14826.firebaseio.com/'
-    firebase = Firebase::Client.new(base_uri)
+    firebase = Firebase::Client.new(base_uri,ENV["FIREBASE_SECRET"])
     page = @agent.get("https://mmls.mmu.edu.my")
     print "Page acquired \n"
     form = page.form
@@ -362,7 +362,7 @@ class ApiController < ApplicationController
 
 
     base_uri = 'https://mmu-hub-14826.firebaseio.com/'
-    firebase = Firebase::Client.new(base_uri)
+    firebase = Firebase::Client.new(base_uri,ENV["FIREBASE_SECRET"])
 
     page = @agent.get(url)
     if page.code != "302"
