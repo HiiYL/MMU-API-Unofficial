@@ -309,10 +309,10 @@ class ApiController < ApplicationController
     else
       cipher = OpenSSL::Cipher.new('aes-256-gcm')
       cipher.encrypt # Required before '#random_key' or '#random_iv' can be called. http://ruby-doc.org/stdlib-2.0.0/libdoc/openssl/rdoc/OpenSSL/Cipher.html#method-i-encrypt
-      secret_key = ENV['CIPHER_SECRET_KEY'] # Insures that the key is the correct length respective to the algorithm used.
+      secret_key = ENV['CIPHER_SECRET'] # Insures that the key is the correct length respective to the algorithm used.
       iv = ENV['CIPHER_IV']
       salt = ENV['CIPHER_SALT']
-      encrypted_student_password = Encryptor.encrypt(value: params[:mmls_password], key: secret_key, iv: iv, salt: salt)
+      encrypted_student_password = Base64.encode64(Encryptor.encrypt(value: params[:mmls_password], key: secret_key, iv: iv, salt: salt)).encode('utf-8')
       response = firebase.set("users/" + params[:google_auth_uid], {password: encrypted_student_password,
        name: details[:name],
         faculty: details[:faculty], subjects: subjects_firebase, id: params[:student_id]})
