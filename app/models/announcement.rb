@@ -25,6 +25,11 @@ public
   end
 
   def refresh_mmls()
+    cipher = OpenSSL::Cipher.new('aes-256-gcm')
+    cipher.encrypt # Required before '#random_key' or '#random_iv' can be called. http://ruby-doc.org/stdlib-2.0.0/libdoc/openssl/rdoc/OpenSSL/Cipher.html#method-i-encrypt
+    secret_key = ENV['CIPHER_SECRET_KEY'] # Insures that the key is the correct length respective to the algorithm used.
+    iv = ENV['CIPHER_IV']
+    salt = ENV['CIPHER_SALT']
     base_uri = 'https://mmu-hub-14826.firebaseio.com/'
     firebase = Firebase::Client.new(base_uri,ENV["FIREBASE_SECRET"])
     response = firebase.get("subjects2")
@@ -32,8 +37,9 @@ public
       subject_url = key
       value["students"].each do |key,value|
         student_id = value["student_id"]
-        mmls_password = value["password"]
-        puts student_id + " " + mmls_password
+        mmls_password_encrypted = value["password"]
+        mmls_password = Encryptor.decrypt(value: mmls_password_encrypted, key: secret_key, iv: iv, salt: salt)
+        # puts student_id + " " + mmls_password
         auth_key = login_mmls_headless(student_id, mmls_password)
         success = mmls_refresh_subject_firebase_no_weeks(subject_url,auth_key)
         if success

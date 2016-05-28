@@ -59,6 +59,7 @@ GEM
     dotenv-rails (2.0.2)
       dotenv (= 2.0.2)
       railties (~> 4.0)
+    encryptor (3.0.0)
     erubis (2.7.0)
     execjs (2.5.2)
     firebase (0.2.6)
@@ -197,6 +198,7 @@ DEPENDENCIES
   byebug
   coffee-rails (~> 4.1.0)
   dotenv-rails
+  encryptor
   firebase
   gcm
   jbuilder (~> 2.0)

@@ -6,9 +6,6 @@ class ApiController < ApplicationController
     render json: JSON.pretty_generate( Bulletin.order(posted_on: :desc,url: :desc).limit(20).as_json)
   end
 
-  def test
-  end
-
   def mmls
     page = @agent.get("https://mmls.mmu.edu.my")
     form = page.form
@@ -310,7 +307,13 @@ class ApiController < ApplicationController
     unless page.parser.xpath('//*[@id="alert"]').empty?
      render json: {message: "Incorrect MMLS username or password", status: 400}, status:400
     else
-      response = firebase.set("users/" + params[:google_auth_uid], {password: params[:mmls_password],
+      cipher = OpenSSL::Cipher.new('aes-256-gcm')
+      cipher.encrypt # Required before '#random_key' or '#random_iv' can be called. http://ruby-doc.org/stdlib-2.0.0/libdoc/openssl/rdoc/OpenSSL/Cipher.html#method-i-encrypt
+      secret_key = ENV['CIPHER_SECRET_KEY'] # Insures that the key is the correct length respective to the algorithm used.
+      iv = ENV['CIPHER_IV']
+      salt = ENV['CIPHER_SALT']
+      encrypted_student_password = Encryptor.encrypt(value: params[:mmls_password], key: secret_key, iv: iv, salt: salt)
+      response = firebase.set("users/" + params[:google_auth_uid], {password: encrypted_student_password,
        name: details[:name],
         faculty: details[:faculty], subjects: subjects_firebase, id: params[:student_id]})
       puts "SUCCESSS??" + response.success?.to_s

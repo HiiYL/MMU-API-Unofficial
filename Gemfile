@@ -41,6 +41,8 @@ gem 'pg'
 
 gem 'firebase'
 
+gem 'encryptor'
+
 
 
 # Use Unicorn as the app server
