@@ -15,7 +15,7 @@ class ApiController < ApplicationController
 
     page = @agent.submit(form)
     if page.parser.xpath('//*[@id="alert"]').empty?
-      subject_links = page.links_with(:text => /[A-Z][A-Z][A-Z][0-9][0-9][0-9][0-9] . [A-Z][A-Z]/)
+      subject_links = page.links_with(:text => /[A-Z][A-Z][A-Z][0-9][0-9][0-9][0-9] . [A-Z0-9 ][A-Z0-9 ][A-Z0-9 ]/)
       @subjects = []
       files = []
       subject_links.each do |link|
@@ -290,7 +290,7 @@ class ApiController < ApplicationController
     details = Hash.new
     details[:name] = details_array[1]
     details[:faculty] = details_array[3]
-    subject_links = page.links_with(:text => /[A-Z][A-Z][A-Z][0-9][0-9][0-9][0-9] . [A-Z][A-Z]/)
+    subject_links = page.links_with(:text => /[A-Z][A-Z][A-Z][0-9][0-9][0-9][0-9] . [A-Z0-9 ][A-Z0-9 ][A-Z0-9 ]/)
     subjects = []
     subjects_firebase = []
     subject_links.each do |link|
